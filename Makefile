@@ -3,7 +3,7 @@ version := $(shell sed -nre 's/^__version__ = "(.*)"/\1/p' src/$(module)/__init_
 sdist := dist/$(module)-$(version).tar.gz
 wheel := dist/$(module)-$(version)-py3-none-any.whl
 
-all: requirements.txt test
+all: requirements.txt typecheck test
 
 init:
 	pip install --upgrade pip wheel pip-tools
@@ -13,6 +13,9 @@ init:
 test:
 	pytest -vv tests
 	python -m doctest README.md
+
+typecheck:
+	mypy --strict ./src
 
 requirements.txt:
 	pip-compile
@@ -44,4 +47,4 @@ release: build test-sdist test-wheel
 clean:
 	rm -rf build dist venv-sdist venv-wheel
 
-.PHONY: all build init release test test-sdist test-wheel upgrade-deps
+.PHONY: all build init release test test-sdist test-wheel typecheck upgrade-deps

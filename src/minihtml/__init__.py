@@ -8,7 +8,7 @@ AttributeValue = Union[str, int, float, bool]
 
 
 def _format_attributes(attributes: dict[str, AttributeValue]) -> str:
-    parts = []
+    parts: List[str] = []
     for name, value in attributes.items():
         name = escape(name, quote=True)
         if isinstance(value, bool):
@@ -20,41 +20,28 @@ def _format_attributes(attributes: dict[str, AttributeValue]) -> str:
     return "".join(parts)
 
 
-_T = TypeVar("_T", bound="Tag")
+_B = TypeVar("_B", bound="Base")
 
-class Tag:
+class Base:
     """
-    An HTML tag.
+    Base class for all tags.
     """
     def __init__(
         self,
         name: str,
-        *,
-        indent: bool = True,
     ) -> None:
         self.name = name
         self.attributes: Dict[str, AttributeValue] = {}
         self.children: List[Union["Tag", Text]] = []
-        self.indent = indent
 
-    def __call__(
-        self: _T,
-        *children: Union["Tag", Text],
-        **attributes: AttributeValue,
-    ) -> _T:
-        if children:
-            self.children.extend(children)
-        #indent = attributes.pop("_indent", None)
-        #if indent is not None:
-        #    self.indent = indent
-        for name, value in attributes.items():
+    def _set_attributes(self, attr: Dict[str, AttributeValue]) -> None:
+        for name, value in attr.items():
             # TODO disallow leading '_' ?
             name = name.rstrip("_").replace("_", "-")
             self.attributes[name] = value
-        return self
 
-    def __getitem__(self: _T, name: str) -> _T:
-        class_names = []
+    def __getitem__(self: _B, name: str) -> _B:
+        class_names: List[str] = []
         for word in name.split():
             if word[0] == "#":
                 self.attributes["id"] = word[1:]
@@ -65,12 +52,11 @@ class Tag:
         return self
 
     def __str__(self) -> str:
-        join = "\n" if self.indent else ""
         return "<{name}{attributes}>{children}</{name}>".format(
             name=self.name,
             attributes=_format_attributes(self.attributes),
-            children=join.join([
-                str(c) if isinstance(c, Tag) else escape(str(c), quote=False)
+            children="".join([
+                str(c) if isinstance(c, Base) else escape(str(c), quote=False)
                 for c in self.children
             ]),
         )
@@ -79,14 +65,31 @@ class Tag:
         return "<Tag {!r}>".format(self.name)
 
 
+_T = TypeVar("_T", bound="Tag")
+
+class Tag(Base):
+    """
+    An HTML tag.
+    """
+
+    def __call__(
+        self: _T,
+        *children: Union["Tag", Text],
+        **attributes: AttributeValue,
+    ) -> _T:
+        self.children.extend(children)
+        self._set_attributes(attributes)
+        return self
+
+
 _ET = TypeVar("_ET", bound="EmptyTag")
 
-class EmptyTag(Tag):
+class EmptyTag(Base):
     """
     An HTML tag with no content.
     """
     def __call__(self: _ET, **attributes: AttributeValue) -> _ET:
-        super().__call__(**attributes)
+        self._set_attributes(attributes)
         return self
 
     def __str__(self) -> str:
@@ -98,31 +101,33 @@ class EmptyTag(Tag):
 
 _TO = TypeVar("_TO", bound="TextOnlyTag")
 
-class TextOnlyTag(Tag):
+class TextOnlyTag(Base):
     """
     An HTML tag that contains only text content.
     """
     def __call__(self: _TO, *children: Text, **attributes: AttributeValue) -> _TO:
-        super().__call__(*children, **attributes)
+        self.children.extend(children)
+        self._set_attributes(attributes)
         return self
 
 
 _NT = TypeVar("_NT", bound="NoTextTag")
 
-class NoTextTag(Tag):
+class NoTextTag(Base):
     """
     An HTML tag that contains no text content.
     """
     def __call__(self: _NT, *children: Tag, **attributes: AttributeValue) -> _NT:
-        super().__call__(*children, **attributes)
+        self.children.extend(children)
+        self._set_attributes(attributes)
         return self
 
 
 _RT = TypeVar("_RT", bound="RawText")
 
-class RawText(Tag):
+class RawText(Base):
     def __call__(self: _RT, *children: str) -> _RT:
-        super().__call__(*children)
+        self.children.extend(children)
         return self
 
     def __str__(self) -> str:
@@ -133,20 +138,22 @@ class Html:
     """
     HTML Tag factory.
     """
-    def __init__(self, indent :bool = True) -> None:
-        self.indent = indent
+    def __init__(self) -> None:
+        pass
+
+    # Helper functions to pass on common arguments to tags (TBD).
 
     def _tag(self, name: str) -> Tag:
-        return Tag(name, indent=self.indent)
+        return Tag(name)
 
     def _empty_tag(self, name: str) -> EmptyTag:
-        return EmptyTag(name, indent=self.indent)
+        return EmptyTag(name)
     
     def _text_only_tag(self, name: str) -> TextOnlyTag:
-        return TextOnlyTag(name, indent=self.indent)
+        return TextOnlyTag(name)
     
     def _no_text_tag(self, name: str) -> NoTextTag:
-        return NoTextTag(name, indent=self.indent)
+        return NoTextTag(name)
 
     @property
     def raw(self) -> RawText:
@@ -581,7 +588,7 @@ class Html:
         return self._tag("canvas")
 
 
-def tostring(root: Tag, doctype="<!doctype html>") -> str:
+def tostring(root: Tag, doctype: str = "<!doctype html>") -> str:
     """
     Format an HTML document with docstring.
     """
