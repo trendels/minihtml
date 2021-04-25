@@ -7,7 +7,7 @@ Text = Union[str, int, float, "RawText"]
 AttributeValue = Union[str, int, float, bool]
 
 
-def _format_attributes(attributes: dict[str, AttributeValue]) -> str:
+def _format_attributes(attributes: Dict[str, AttributeValue]) -> str:
     parts: List[str] = []
     for name, value in attributes.items():
         name = escape(name, quote=True)
