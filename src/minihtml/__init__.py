@@ -20,9 +20,9 @@ def _format_attributes(attributes: dict[str, AttributeValue]) -> str:
     return "".join(parts)
 
 
-_B = TypeVar("_B", bound="Base")
+_B = TypeVar("_B", bound="_Tag")
 
-class Base:
+class _Tag:
     """
     Base class for all tags.
     """
@@ -32,7 +32,7 @@ class Base:
     ) -> None:
         self.name = name
         self.attributes: Dict[str, AttributeValue] = {}
-        self.children: List[Union["Tag", Text]] = []
+        self.children: List[Union["_Tag", Text]] = []
 
     def _set_attributes(self, attr: Dict[str, AttributeValue]) -> None:
         for name, value in attr.items():
@@ -56,25 +56,25 @@ class Base:
             name=self.name,
             attributes=_format_attributes(self.attributes),
             children="".join([
-                str(c) if isinstance(c, Base) else escape(str(c), quote=False)
+                str(c) if isinstance(c, _Tag) else escape(str(c), quote=False)
                 for c in self.children
             ]),
         )
 
     def __repr__(self) -> str:
-        return "<Tag {!r}>".format(self.name)
+        return "<{} {!r}>".format(type(self).__name__, self.name)
 
 
 _T = TypeVar("_T", bound="Tag")
 
-class Tag(Base):
+class Tag(_Tag):
     """
     An HTML tag.
     """
 
     def __call__(
         self: _T,
-        *children: Union["Tag", Text],
+        *children: Union["_Tag", Text],
         **attributes: AttributeValue,
     ) -> _T:
         self.children.extend(children)
@@ -84,7 +84,7 @@ class Tag(Base):
 
 _ET = TypeVar("_ET", bound="EmptyTag")
 
-class EmptyTag(Base):
+class EmptyTag(_Tag):
     """
     An HTML tag with no content.
     """
@@ -101,7 +101,7 @@ class EmptyTag(Base):
 
 _TO = TypeVar("_TO", bound="TextOnlyTag")
 
-class TextOnlyTag(Base):
+class TextOnlyTag(_Tag):
     """
     An HTML tag that contains only text content.
     """
@@ -113,11 +113,11 @@ class TextOnlyTag(Base):
 
 _NT = TypeVar("_NT", bound="NoTextTag")
 
-class NoTextTag(Base):
+class NoTextTag(_Tag):
     """
     An HTML tag that contains no text content.
     """
-    def __call__(self: _NT, *children: Tag, **attributes: AttributeValue) -> _NT:
+    def __call__(self: _NT, *children: _Tag, **attributes: AttributeValue) -> _NT:
         self.children.extend(children)
         self._set_attributes(attributes)
         return self
@@ -125,7 +125,7 @@ class NoTextTag(Base):
 
 _RT = TypeVar("_RT", bound="RawText")
 
-class RawText(Base):
+class RawText(_Tag):
     def __call__(self: _RT, *children: str) -> _RT:
         self.children.extend(children)
         return self
@@ -588,7 +588,7 @@ class Html:
         return self._tag("canvas")
 
 
-def tostring(root: Tag, doctype: str = "<!doctype html>") -> str:
+def tostring(root: _Tag, doctype: str = "<!doctype html>") -> str:
     """
     Format an HTML document with docstring.
     """
