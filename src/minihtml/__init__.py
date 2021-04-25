@@ -496,6 +496,48 @@ class Html:
     # Tabular data
 
     @property
+    def table(self) -> NoTextTag:
+        return self._no_text_tag("table")
+
+    @property
+    def caption(self) -> MixedTag:
+        return self._tag("caption")
+
+    @property
+    def colgroup(self) -> NoTextTag:
+        return self._no_text_tag("colgroup")
+
+    @property
+    def col(self) -> EmptyTag:
+        return self._empty_tag("col")
+
+    @property
+    def tbody(self) -> NoTextTag:
+        return self._no_text_tag("tbody")
+
+    @property
+    def thead(self) -> NoTextTag:
+        return self._no_text_tag("thead")
+
+    @property
+    def tfoot(self) -> NoTextTag:
+        return self._no_text_tag("tfoot")
+
+    @property
+    def tr(self) -> NoTextTag:
+        return self._no_text_tag("tr")
+
+    @property
+    def td(self) -> MixedTag:
+        return self._tag("td")
+
+    @property
+    def th(self) -> MixedTag:
+        return self._tag("th")
+
+    # Forms
+
+    @property
     def form(self) -> MixedTag:
         return self._tag("form")
 
