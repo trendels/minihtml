@@ -1,5 +1,7 @@
 # Simple HTML generation
 
+[![PyPI](https://img.shields.io/pypi/v/minihtml)](https://pypi.python.org/pypi/minihtml)
+
 ## Installation
 
 Install the `minihtml` package from PyPI:
