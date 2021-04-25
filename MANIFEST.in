@@ -1,0 +1,3 @@
+include README.md CHANGELOG.md LICENSE Makefile
+include src/minihtml/py.typed
+recursive-include tests *.py
