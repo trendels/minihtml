@@ -17,7 +17,7 @@ test:
 typecheck:
 	mypy --strict ./src
 
-requirements.txt:
+requirements.txt: requirements.in
 	pip-compile
 
 upgrade-deps:
