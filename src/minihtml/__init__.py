@@ -1,7 +1,7 @@
 from html import escape
 from typing import Dict, List, Union, TypeVar
 
-__version__ = "0.1"
+__version__ = "0.1.1"
 
 Text = Union[str, int, float, "RawText"]
 AttributeValue = Union[str, int, float, bool]
