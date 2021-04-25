@@ -20,9 +20,9 @@ def _format_attributes(attributes: Dict[str, AttributeValue]) -> str:
     return "".join(parts)
 
 
-_B = TypeVar("_B", bound="_Tag")
+_T = TypeVar("_T", bound="Tag")
 
-class _Tag:
+class Tag:
     """
     Base class for all tags.
     """
@@ -32,7 +32,7 @@ class _Tag:
     ) -> None:
         self.name = name
         self.attributes: Dict[str, AttributeValue] = {}
-        self.children: List[Union["_Tag", Text]] = []
+        self.children: List[Union["Tag", Text]] = []
 
     def _set_attributes(self, attr: Dict[str, AttributeValue]) -> None:
         for name, value in attr.items():
@@ -40,7 +40,7 @@ class _Tag:
             name = name.rstrip("_").replace("_", "-")
             self.attributes[name] = value
 
-    def __getitem__(self: _B, name: str) -> _B:
+    def __getitem__(self: _T, name: str) -> _T:
         class_names: List[str] = []
         for word in name.split():
             if word[0] == "#":
@@ -56,7 +56,7 @@ class _Tag:
             name=self.name,
             attributes=_format_attributes(self.attributes),
             children="".join([
-                str(c) if isinstance(c, _Tag) else escape(str(c), quote=False)
+                str(c) if isinstance(c, Tag) else escape(str(c), quote=False)
                 for c in self.children
             ]),
         )
@@ -65,18 +65,18 @@ class _Tag:
         return "<{} {!r}>".format(type(self).__name__, self.name)
 
 
-_T = TypeVar("_T", bound="Tag")
+_MT = TypeVar("_MT", bound="MixedTag")
 
-class Tag(_Tag):
+class MixedTag(Tag):
     """
-    An HTML tag.
+    An HTML tag that can contain a mix of text and other elements.
     """
 
     def __call__(
-        self: _T,
-        *children: Union["_Tag", Text],
+        self: _MT,
+        *children: Union["Tag", Text],
         **attributes: AttributeValue,
-    ) -> _T:
+    ) -> _MT:
         self.children.extend(children)
         self._set_attributes(attributes)
         return self
@@ -84,7 +84,7 @@ class Tag(_Tag):
 
 _ET = TypeVar("_ET", bound="EmptyTag")
 
-class EmptyTag(_Tag):
+class EmptyTag(Tag):
     """
     An HTML tag with no content.
     """
@@ -101,7 +101,7 @@ class EmptyTag(_Tag):
 
 _TO = TypeVar("_TO", bound="TextOnlyTag")
 
-class TextOnlyTag(_Tag):
+class TextOnlyTag(Tag):
     """
     An HTML tag that contains only text content.
     """
@@ -113,11 +113,11 @@ class TextOnlyTag(_Tag):
 
 _NT = TypeVar("_NT", bound="NoTextTag")
 
-class NoTextTag(_Tag):
+class NoTextTag(Tag):
     """
     An HTML tag that contains no text content.
     """
-    def __call__(self: _NT, *children: _Tag, **attributes: AttributeValue) -> _NT:
+    def __call__(self: _NT, *children: Tag, **attributes: AttributeValue) -> _NT:
         self.children.extend(children)
         self._set_attributes(attributes)
         return self
@@ -125,7 +125,7 @@ class NoTextTag(_Tag):
 
 _RT = TypeVar("_RT", bound="RawText")
 
-class RawText(_Tag):
+class RawText(Tag):
     def __call__(self: _RT, *children: str) -> _RT:
         self.children.extend(children)
         return self
@@ -143,8 +143,8 @@ class Html:
 
     # Helper functions to pass on common arguments to tags (TBD).
 
-    def _tag(self, name: str) -> Tag:
-        return Tag(name)
+    def _tag(self, name: str) -> MixedTag:
+        return MixedTag(name)
 
     def _empty_tag(self, name: str) -> EmptyTag:
         return EmptyTag(name)
@@ -197,47 +197,47 @@ class Html:
     # Sections
 
     @property
-    def body(self) -> Tag:
+    def body(self) -> MixedTag:
         return self._tag("body")
 
     @property
-    def article(self) -> Tag:
+    def article(self) -> MixedTag:
         return self._tag("article")
 
     @property
-    def section(self) -> Tag:
+    def section(self) -> MixedTag:
         return self._tag("section")
 
     @property
-    def nav(self) -> Tag:
+    def nav(self) -> MixedTag:
         return self._tag("nav")
 
     @property
-    def aside(self) -> Tag:
+    def aside(self) -> MixedTag:
         return self._tag("aside")
 
     @property
-    def h1(self) -> Tag:
+    def h1(self) -> MixedTag:
         return self._tag("h1")
 
     @property
-    def h2(self) -> Tag:
+    def h2(self) -> MixedTag:
         return self._tag("h2")
 
     @property
-    def h3(self) -> Tag:
+    def h3(self) -> MixedTag:
         return self._tag("h3")
 
     @property
-    def h4(self) -> Tag:
+    def h4(self) -> MixedTag:
         return self._tag("h4")
 
     @property
-    def h5(self) -> Tag:
+    def h5(self) -> MixedTag:
         return self._tag("h5")
 
     @property
-    def h6(self) -> Tag:
+    def h6(self) -> MixedTag:
         return self._tag("h6")
 
     @property
@@ -245,21 +245,21 @@ class Html:
         return self._no_text_tag("hgroup")
 
     @property
-    def header(self) -> Tag:
+    def header(self) -> MixedTag:
         return self._tag("header")
 
     @property
-    def footer(self) -> Tag:
+    def footer(self) -> MixedTag:
         return self._tag("footer")
 
     @property
-    def address(self) -> Tag:
+    def address(self) -> MixedTag:
         return self._tag("address")
 
     # Grouping content
 
     @property
-    def p(self) -> Tag:
+    def p(self) -> MixedTag:
         return self._tag("p")
 
     @property
@@ -267,11 +267,11 @@ class Html:
         return self._empty_tag("hr")
 
     @property
-    def pre(self) -> Tag:
+    def pre(self) -> MixedTag:
         return self._tag("pre")
 
     @property
-    def blockquote(self) -> Tag:
+    def blockquote(self) -> MixedTag:
         return self._tag("blockquote")
 
     @property
@@ -283,7 +283,7 @@ class Html:
         return self._no_text_tag("ul")
 
     @property
-    def li(self) -> Tag:
+    def li(self) -> MixedTag:
         return self._tag("li")
 
     @property
@@ -291,137 +291,137 @@ class Html:
         return self._no_text_tag("dl")
 
     @property
-    def dt(self) -> Tag:
+    def dt(self) -> MixedTag:
         return self._tag("dt")
 
     @property
-    def dd(self) -> Tag:
+    def dd(self) -> MixedTag:
         return self._tag("dd")
 
     @property
-    def figure(self) -> Tag:
+    def figure(self) -> MixedTag:
         return self._tag("figure")
 
     @property
-    def figcaption(self) -> Tag:
+    def figcaption(self) -> MixedTag:
         return self._tag("figcaption")
 
     @property
-    def main(self) -> Tag:
+    def main(self) -> MixedTag:
         return self._tag("main")
 
     @property
-    def div(self) -> Tag:
+    def div(self) -> MixedTag:
         return self._tag("div")
 
     # Text-level semantics
 
     @property
-    def a(self) -> Tag:
+    def a(self) -> MixedTag:
         return self._tag("a")
 
     @property
-    def em(self) -> Tag:
+    def em(self) -> MixedTag:
         return self._tag("em")
 
     @property
-    def strong(self) -> Tag:
+    def strong(self) -> MixedTag:
         return self._tag("strong")
 
     @property
-    def small(self) -> Tag:
+    def small(self) -> MixedTag:
         return self._tag("small")
 
     @property
-    def s(self) -> Tag:
+    def s(self) -> MixedTag:
         return self._tag("s")
 
     @property
-    def cite(self) -> Tag:
+    def cite(self) -> MixedTag:
         return self._tag("cite")
 
     @property
-    def q(self) -> Tag:
+    def q(self) -> MixedTag:
         return self._tag("q")
 
     @property
-    def dfn(self) -> Tag:
+    def dfn(self) -> MixedTag:
         return self._tag("dfn")
 
     @property
-    def abbr(self) -> Tag:
+    def abbr(self) -> MixedTag:
         return self._tag("abbr")
 
     @property
-    def ruby(self) -> Tag:
+    def ruby(self) -> MixedTag:
         return self._tag("ruby")
 
     @property
-    def rt(self) -> Tag:
+    def rt(self) -> MixedTag:
         return self._tag("rt")
 
     @property
-    def rb(self) -> Tag:
+    def rb(self) -> MixedTag:
         return self._tag("rb")
 
     @property
-    def data(self) -> Tag:
+    def data(self) -> MixedTag:
         return self._tag("data")
 
     @property
-    def time(self) -> Tag:
+    def time(self) -> MixedTag:
         return self._tag("time")
 
     @property
-    def code(self) -> Tag:
+    def code(self) -> MixedTag:
         return self._tag("code")
 
     @property
-    def var(self) -> Tag:
+    def var(self) -> MixedTag:
         return self._tag("var")
 
     @property
-    def samp(self) -> Tag:
+    def samp(self) -> MixedTag:
         return self._tag("samp")
 
     @property
-    def kbd(self) -> Tag:
+    def kbd(self) -> MixedTag:
         return self._tag("kbd")
 
     @property
-    def sub(self) -> Tag:
+    def sub(self) -> MixedTag:
         return self._tag("sub")
 
     @property
-    def sup(self) -> Tag:
+    def sup(self) -> MixedTag:
         return self._tag("sup")
 
     @property
-    def i(self) -> Tag:
+    def i(self) -> MixedTag:
         return self._tag("i")
 
     @property
-    def b(self) -> Tag:
+    def b(self) -> MixedTag:
         return self._tag("b")
 
     @property
-    def u(self) -> Tag:
+    def u(self) -> MixedTag:
         return self._tag("u")
 
     @property
-    def mark(self) -> Tag:
+    def mark(self) -> MixedTag:
         return self._tag("mark")
 
     @property
-    def bdi(self) -> Tag:
+    def bdi(self) -> MixedTag:
         return self._tag("bdi")
 
     @property
-    def bdo(self) -> Tag:
+    def bdo(self) -> MixedTag:
         return self._tag("bdo")
 
     @property
-    def span(self) -> Tag:
+    def span(self) -> MixedTag:
         return self._tag("span")
 
     @property
@@ -436,11 +436,11 @@ class Html:
     # Edits
 
     @property
-    def ins(self) -> Tag:
+    def ins(self) -> MixedTag:
         return self._tag("ins")
 
     @property
-    def del_(self) -> Tag:
+    def del_(self) -> MixedTag:
         return self._tag("del")
 
     # Embedded content
@@ -458,7 +458,7 @@ class Html:
         return self._empty_tag("img")
 
     @property
-    def iframe(self) -> Tag:
+    def iframe(self) -> MixedTag:
         return self._tag("iframe")
 
     @property
@@ -466,7 +466,7 @@ class Html:
         return self._empty_tag("embed")
 
     @property
-    def object(self) -> Tag:
+    def object(self) -> MixedTag:
         return self._tag("object")
 
     @property
@@ -474,11 +474,11 @@ class Html:
         return self._empty_tag("param")
 
     @property
-    def video(self) -> Tag:
+    def video(self) -> MixedTag:
         return self._tag("video")
 
     @property
-    def audio(self) -> Tag:
+    def audio(self) -> MixedTag:
         return self._tag("audio")
 
     @property
@@ -486,7 +486,7 @@ class Html:
         return self._empty_tag("track")
 
     @property
-    def map(self) -> Tag:
+    def map(self) -> MixedTag:
         return self._tag("map")
 
     @property
@@ -496,11 +496,11 @@ class Html:
     # Tabular data
 
     @property
-    def form(self) -> Tag:
+    def form(self) -> MixedTag:
         return self._tag("form")
 
     @property
-    def label(self) -> Tag:
+    def label(self) -> MixedTag:
         return self._tag("label")
 
     @property
@@ -508,7 +508,7 @@ class Html:
         return self._empty_tag("input")
 
     @property
-    def button(self) -> Tag:
+    def button(self) -> MixedTag:
         return self._tag("button")
 
     @property
@@ -516,7 +516,7 @@ class Html:
         return self._no_text_tag("select")
 
     @property
-    def datalist(self) -> Tag:
+    def datalist(self) -> MixedTag:
         return self._tag("datalist")
 
     @property
@@ -532,37 +532,37 @@ class Html:
         return self._text_only_tag("textarea")
 
     @property
-    def output(self) -> Tag:
+    def output(self) -> MixedTag:
         return self._tag("output")
 
     @property
-    def progress(self) -> Tag:
+    def progress(self) -> MixedTag:
         return self._tag("progress")
 
     @property
-    def meter(self) -> Tag:
+    def meter(self) -> MixedTag:
         return self._tag("meter")
 
     @property
-    def fieldset(self) -> Tag:
+    def fieldset(self) -> MixedTag:
         return self._tag("fieldset")
 
     @property
-    def legend(self) -> Tag:
+    def legend(self) -> MixedTag:
         return self._tag("legend")
 
     # Interactive elements
 
     @property
-    def details(self) -> Tag:
+    def details(self) -> MixedTag:
         return self._tag("details")
 
     @property
-    def summary(self) -> Tag:
+    def summary(self) -> MixedTag:
         return self._tag("summary")
 
     @property
-    def dialog(self) -> Tag:
+    def dialog(self) -> MixedTag:
         return self._tag("dialog")
 
     # Scripting
@@ -572,23 +572,23 @@ class Html:
         return self._text_only_tag("script")
 
     @property
-    def noscript(self) -> Tag:
+    def noscript(self) -> MixedTag:
         return self._tag("noscript")
 
     @property
-    def template(self) -> Tag:
+    def template(self) -> MixedTag:
         return self._tag("template")
 
     @property
-    def slot(self) -> Tag:
+    def slot(self) -> MixedTag:
         return self._tag("slot")
 
     @property
-    def canvas(self) -> Tag:
+    def canvas(self) -> MixedTag:
         return self._tag("canvas")
 
 
-def tostring(root: _Tag, doctype: str = "<!doctype html>") -> str:
+def tostring(root: Tag, doctype: str = "<!doctype html>") -> str:
     """
     Format an HTML document with docstring.
     """

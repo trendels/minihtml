@@ -72,4 +72,4 @@ def test_tostring(h: Html):
 
 
 def test_tag_repr(h: Html):
-    assert repr(h.p("hi")) == "<Tag 'p'>"
+    assert repr(h.p("hi")) == "<MixedTag 'p'>"
