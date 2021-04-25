@@ -21,6 +21,7 @@ setup(
     classifiers = [
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
+        "Typing :: Typed",
     ],
     packages=find_packages("src"),
     package_dir={"": "src"},
