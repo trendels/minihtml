@@ -54,7 +54,8 @@ To include unescaped content, use the `raw` element. Only use this with
 ~~~
 
 To use tag or attribute names that conflict with python keywords, append an
-underscore. Underscores within attribute names are converted to hyphens ("-"):
+underscore. Underscores within attribute names are converted to hyphens ("-",
+except for a single underscore, which is passed through unchanged).
 
 ~~~python
 >>> print(h.del_("deleted text"))
@@ -63,6 +64,8 @@ underscore. Underscores within attribute names are converted to hyphens ("-"):
 <label for="fieldname">text</label>
 >>> print(h.span(data_foo="bar"))
 <span data-foo="bar"></span>
+>>> print(h.span(_="something"))
+<span _="something"></span>
 
 ~~~
 

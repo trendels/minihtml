@@ -36,8 +36,9 @@ class Tag:
 
     def _set_attributes(self, attr: Dict[str, AttributeValue]) -> None:
         for name, value in attr.items():
-            # TODO disallow leading '_' ?
-            name = name.rstrip("_").replace("_", "-")
+            if name != "_":
+                # TODO disallow leading '_' ?
+                name = name.rstrip("_").replace("_", "-")
             self.attributes[name] = value
 
     def __getitem__(self: _T, name: str) -> _T:

@@ -22,6 +22,7 @@ def test_attributes(h: Html):
 def test_attributes_name_mangling(h: Html):
     assert str(h.span(class_="myclass")) == '<span class="myclass"></span>'
     assert str(h.span(data_foo="bar")) == '<span data-foo="bar"></span>'
+    assert str(h.span(_="quux")) == '<span _="quux"></span>'
 
 
 def test_name_only_attributes(h: Html):
