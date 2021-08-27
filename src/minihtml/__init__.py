@@ -160,10 +160,10 @@ class Html:
 
     def _empty_tag(self, name: str) -> EmptyElement:
         return EmptyElement(name)
-    
+
     def _text_only_tag(self, name: str) -> TextOnlyElement:
         return TextOnlyElement(name)
-    
+
     def _no_text_tag(self, name: str) -> NoTextElement:
         return NoTextElement(name)
 
