@@ -3,7 +3,7 @@ from typing import Dict, List, Union, TypeVar
 
 __version__ = "0.1.2"
 
-Text = Union[str, int, float, "RawText"]
+TextContent = Union[str, int, float, "RawText"]
 AttributeValue = Union[str, int, float, bool]
 
 
@@ -20,19 +20,27 @@ def _format_attributes(attributes: Dict[str, AttributeValue]) -> str:
     return "".join(parts)
 
 
-_T = TypeVar("_T", bound="Tag")
+class Node:
+    def __init__(self) -> None:
+        self.children: List[Union[Node, TextContent]] = []
 
-class Tag:
+    def __str__(self) -> str:
+        raise NotImplementedError
+
+
+_T = TypeVar("_T", bound="Element")
+
+class Element(Node):
     """
-    Base class for all tags.
+    Base class for all elements.
     """
     def __init__(
         self,
         name: str,
     ) -> None:
+        super().__init__()
         self.name = name
         self.attributes: Dict[str, AttributeValue] = {}
-        self.children: List[Union["Tag", Text]] = []
 
     def _set_attributes(self, attr: Dict[str, AttributeValue]) -> None:
         for name, value in attr.items():
@@ -57,7 +65,7 @@ class Tag:
             name=self.name,
             attributes=_format_attributes(self.attributes),
             children="".join([
-                str(c) if isinstance(c, Tag) else escape(str(c), quote=False)
+                str(c) if isinstance(c, Node) else escape(str(c), quote=False)
                 for c in self.children
             ]),
         )
@@ -66,16 +74,16 @@ class Tag:
         return "<{} {!r}>".format(type(self).__name__, self.name)
 
 
-_MT = TypeVar("_MT", bound="MixedTag")
+_MT = TypeVar("_MT", bound="MixedElement")
 
-class MixedTag(Tag):
+class MixedElement(Element):
     """
-    An HTML tag that can contain a mix of text and other elements.
+    An HTML elements that can contain text or other elements.
     """
 
     def __call__(
         self: _MT,
-        *children: Union["Tag", Text],
+        *children: Union["Element", TextContent],
         **attributes: AttributeValue,
     ) -> _MT:
         self.children.extend(children)
@@ -83,11 +91,11 @@ class MixedTag(Tag):
         return self
 
 
-_ET = TypeVar("_ET", bound="EmptyTag")
+_ET = TypeVar("_ET", bound="EmptyElement")
 
-class EmptyTag(Tag):
+class EmptyElement(Element):
     """
-    An HTML tag with no content.
+    An HTML element with no content.
     """
     def __call__(self: _ET, **attributes: AttributeValue) -> _ET:
         self._set_attributes(attributes)
@@ -100,25 +108,25 @@ class EmptyTag(Tag):
         )
 
 
-_TO = TypeVar("_TO", bound="TextOnlyTag")
+_TO = TypeVar("_TO", bound="TextOnlyElement")
 
-class TextOnlyTag(Tag):
+class TextOnlyElement(Element):
     """
-    An HTML tag that contains only text content.
+    An HTML element that contains only text content.
     """
-    def __call__(self: _TO, *children: Text, **attributes: AttributeValue) -> _TO:
+    def __call__(self: _TO, *children: TextContent, **attributes: AttributeValue) -> _TO:
         self.children.extend(children)
         self._set_attributes(attributes)
         return self
 
 
-_NT = TypeVar("_NT", bound="NoTextTag")
+_NT = TypeVar("_NT", bound="NoTextElement")
 
-class NoTextTag(Tag):
+class NoTextElement(Element):
     """
-    An HTML tag that contains no text content.
+    An HTML element that contains no text content.
     """
-    def __call__(self: _NT, *children: Tag, **attributes: AttributeValue) -> _NT:
+    def __call__(self: _NT, *children: Element, **attributes: AttributeValue) -> _NT:
         self.children.extend(children)
         self._set_attributes(attributes)
         return self
@@ -126,39 +134,42 @@ class NoTextTag(Tag):
 
 _RT = TypeVar("_RT", bound="RawText")
 
-class RawText(Tag):
-    def __call__(self: _RT, *children: str) -> _RT:
-        self.children.extend(children)
+class RawText(Node):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def __call__(self: _RT, content: str) -> _RT:
+        self.children.append(content)
         return self
 
     def __str__(self) -> str:
-        return "".join([c for c in self.children if isinstance(c, str)])
+        return "".join(str(c) for c in self.children)
 
 
 class Html:
     """
-    HTML Tag factory.
+    HTML Element factory.
     """
     def __init__(self) -> None:
         pass
 
     # Helper functions to pass on common arguments to tags (TBD).
 
-    def _tag(self, name: str) -> MixedTag:
-        return MixedTag(name)
+    def _tag(self, name: str) -> MixedElement:
+        return MixedElement(name)
 
-    def _empty_tag(self, name: str) -> EmptyTag:
-        return EmptyTag(name)
+    def _empty_tag(self, name: str) -> EmptyElement:
+        return EmptyElement(name)
     
-    def _text_only_tag(self, name: str) -> TextOnlyTag:
-        return TextOnlyTag(name)
+    def _text_only_tag(self, name: str) -> TextOnlyElement:
+        return TextOnlyElement(name)
     
-    def _no_text_tag(self, name: str) -> NoTextTag:
-        return NoTextTag(name)
+    def _no_text_tag(self, name: str) -> NoTextElement:
+        return NoTextElement(name)
 
     @property
     def raw(self) -> RawText:
-        return RawText("")
+        return RawText()
 
     # References:
     # https://html.spec.whatwg.org/multipage/#toc-semantics
@@ -166,472 +177,472 @@ class Html:
     # The document element
 
     @property
-    def html(self) -> NoTextTag:
+    def html(self) -> NoTextElement:
         return self._no_text_tag("html")
 
     # Document metadata
 
     @property
-    def head(self) -> NoTextTag:
+    def head(self) -> NoTextElement:
         return self._no_text_tag("head")
 
     @property
-    def title(self) -> TextOnlyTag:
+    def title(self) -> TextOnlyElement:
         return self._text_only_tag("title")
 
     @property
-    def base(self) -> EmptyTag:
+    def base(self) -> EmptyElement:
         return self._empty_tag("base")
 
     @property
-    def link(self) -> EmptyTag:
+    def link(self) -> EmptyElement:
         return self._empty_tag("link")
 
     @property
-    def meta(self) -> EmptyTag:
+    def meta(self) -> EmptyElement:
         return self._empty_tag("meta")
 
     @property
-    def style(self) -> TextOnlyTag:
+    def style(self) -> TextOnlyElement:
         return self._text_only_tag("style")
 
     # Sections
 
     @property
-    def body(self) -> MixedTag:
+    def body(self) -> MixedElement:
         return self._tag("body")
 
     @property
-    def article(self) -> MixedTag:
+    def article(self) -> MixedElement:
         return self._tag("article")
 
     @property
-    def section(self) -> MixedTag:
+    def section(self) -> MixedElement:
         return self._tag("section")
 
     @property
-    def nav(self) -> MixedTag:
+    def nav(self) -> MixedElement:
         return self._tag("nav")
 
     @property
-    def aside(self) -> MixedTag:
+    def aside(self) -> MixedElement:
         return self._tag("aside")
 
     @property
-    def h1(self) -> MixedTag:
+    def h1(self) -> MixedElement:
         return self._tag("h1")
 
     @property
-    def h2(self) -> MixedTag:
+    def h2(self) -> MixedElement:
         return self._tag("h2")
 
     @property
-    def h3(self) -> MixedTag:
+    def h3(self) -> MixedElement:
         return self._tag("h3")
 
     @property
-    def h4(self) -> MixedTag:
+    def h4(self) -> MixedElement:
         return self._tag("h4")
 
     @property
-    def h5(self) -> MixedTag:
+    def h5(self) -> MixedElement:
         return self._tag("h5")
 
     @property
-    def h6(self) -> MixedTag:
+    def h6(self) -> MixedElement:
         return self._tag("h6")
 
     @property
-    def hgroup(self) -> NoTextTag:
+    def hgroup(self) -> NoTextElement:
         return self._no_text_tag("hgroup")
 
     @property
-    def header(self) -> MixedTag:
+    def header(self) -> MixedElement:
         return self._tag("header")
 
     @property
-    def footer(self) -> MixedTag:
+    def footer(self) -> MixedElement:
         return self._tag("footer")
 
     @property
-    def address(self) -> MixedTag:
+    def address(self) -> MixedElement:
         return self._tag("address")
 
     # Grouping content
 
     @property
-    def p(self) -> MixedTag:
+    def p(self) -> MixedElement:
         return self._tag("p")
 
     @property
-    def hr(self) -> EmptyTag:
+    def hr(self) -> EmptyElement:
         return self._empty_tag("hr")
 
     @property
-    def pre(self) -> MixedTag:
+    def pre(self) -> MixedElement:
         return self._tag("pre")
 
     @property
-    def blockquote(self) -> MixedTag:
+    def blockquote(self) -> MixedElement:
         return self._tag("blockquote")
 
     @property
-    def ol(self) -> NoTextTag:
+    def ol(self) -> NoTextElement:
         return self._no_text_tag("ol")
 
     @property
-    def ul(self) -> NoTextTag:
+    def ul(self) -> NoTextElement:
         return self._no_text_tag("ul")
 
     @property
-    def li(self) -> MixedTag:
+    def li(self) -> MixedElement:
         return self._tag("li")
 
     @property
-    def dl(self) -> NoTextTag:
+    def dl(self) -> NoTextElement:
         return self._no_text_tag("dl")
 
     @property
-    def dt(self) -> MixedTag:
+    def dt(self) -> MixedElement:
         return self._tag("dt")
 
     @property
-    def dd(self) -> MixedTag:
+    def dd(self) -> MixedElement:
         return self._tag("dd")
 
     @property
-    def figure(self) -> MixedTag:
+    def figure(self) -> MixedElement:
         return self._tag("figure")
 
     @property
-    def figcaption(self) -> MixedTag:
+    def figcaption(self) -> MixedElement:
         return self._tag("figcaption")
 
     @property
-    def main(self) -> MixedTag:
+    def main(self) -> MixedElement:
         return self._tag("main")
 
     @property
-    def div(self) -> MixedTag:
+    def div(self) -> MixedElement:
         return self._tag("div")
 
     # Text-level semantics
 
     @property
-    def a(self) -> MixedTag:
+    def a(self) -> MixedElement:
         return self._tag("a")
 
     @property
-    def em(self) -> MixedTag:
+    def em(self) -> MixedElement:
         return self._tag("em")
 
     @property
-    def strong(self) -> MixedTag:
+    def strong(self) -> MixedElement:
         return self._tag("strong")
 
     @property
-    def small(self) -> MixedTag:
+    def small(self) -> MixedElement:
         return self._tag("small")
 
     @property
-    def s(self) -> MixedTag:
+    def s(self) -> MixedElement:
         return self._tag("s")
 
     @property
-    def cite(self) -> MixedTag:
+    def cite(self) -> MixedElement:
         return self._tag("cite")
 
     @property
-    def q(self) -> MixedTag:
+    def q(self) -> MixedElement:
         return self._tag("q")
 
     @property
-    def dfn(self) -> MixedTag:
+    def dfn(self) -> MixedElement:
         return self._tag("dfn")
 
     @property
-    def abbr(self) -> MixedTag:
+    def abbr(self) -> MixedElement:
         return self._tag("abbr")
 
     @property
-    def ruby(self) -> MixedTag:
+    def ruby(self) -> MixedElement:
         return self._tag("ruby")
 
     @property
-    def rt(self) -> MixedTag:
+    def rt(self) -> MixedElement:
         return self._tag("rt")
 
     @property
-    def rb(self) -> MixedTag:
+    def rb(self) -> MixedElement:
         return self._tag("rb")
 
     @property
-    def data(self) -> MixedTag:
+    def data(self) -> MixedElement:
         return self._tag("data")
 
     @property
-    def time(self) -> MixedTag:
+    def time(self) -> MixedElement:
         return self._tag("time")
 
     @property
-    def code(self) -> MixedTag:
+    def code(self) -> MixedElement:
         return self._tag("code")
 
     @property
-    def var(self) -> MixedTag:
+    def var(self) -> MixedElement:
         return self._tag("var")
 
     @property
-    def samp(self) -> MixedTag:
+    def samp(self) -> MixedElement:
         return self._tag("samp")
 
     @property
-    def kbd(self) -> MixedTag:
+    def kbd(self) -> MixedElement:
         return self._tag("kbd")
 
     @property
-    def sub(self) -> MixedTag:
+    def sub(self) -> MixedElement:
         return self._tag("sub")
 
     @property
-    def sup(self) -> MixedTag:
+    def sup(self) -> MixedElement:
         return self._tag("sup")
 
     @property
-    def i(self) -> MixedTag:
+    def i(self) -> MixedElement:
         return self._tag("i")
 
     @property
-    def b(self) -> MixedTag:
+    def b(self) -> MixedElement:
         return self._tag("b")
 
     @property
-    def u(self) -> MixedTag:
+    def u(self) -> MixedElement:
         return self._tag("u")
 
     @property
-    def mark(self) -> MixedTag:
+    def mark(self) -> MixedElement:
         return self._tag("mark")
 
     @property
-    def bdi(self) -> MixedTag:
+    def bdi(self) -> MixedElement:
         return self._tag("bdi")
 
     @property
-    def bdo(self) -> MixedTag:
+    def bdo(self) -> MixedElement:
         return self._tag("bdo")
 
     @property
-    def span(self) -> MixedTag:
+    def span(self) -> MixedElement:
         return self._tag("span")
 
     @property
-    def br(self) -> EmptyTag:
+    def br(self) -> EmptyElement:
         return self._empty_tag("br")
 
 
     @property
-    def wbr(self) -> EmptyTag:
+    def wbr(self) -> EmptyElement:
         return self._empty_tag("wbr")
 
     # Edits
 
     @property
-    def ins(self) -> MixedTag:
+    def ins(self) -> MixedElement:
         return self._tag("ins")
 
     @property
-    def del_(self) -> MixedTag:
+    def del_(self) -> MixedElement:
         return self._tag("del")
 
     # Embedded content
 
     @property
-    def picture(self) -> NoTextTag:
+    def picture(self) -> NoTextElement:
         return self._no_text_tag("picture")
 
     @property
-    def source(self) -> EmptyTag:
+    def source(self) -> EmptyElement:
         return self._empty_tag("source")
 
     @property
-    def img(self) -> EmptyTag:
+    def img(self) -> EmptyElement:
         return self._empty_tag("img")
 
     @property
-    def iframe(self) -> MixedTag:
+    def iframe(self) -> MixedElement:
         return self._tag("iframe")
 
     @property
-    def embed(self) -> EmptyTag:
+    def embed(self) -> EmptyElement:
         return self._empty_tag("embed")
 
     @property
-    def object(self) -> MixedTag:
+    def object(self) -> MixedElement:
         return self._tag("object")
 
     @property
-    def param(self) -> EmptyTag:
+    def param(self) -> EmptyElement:
         return self._empty_tag("param")
 
     @property
-    def video(self) -> MixedTag:
+    def video(self) -> MixedElement:
         return self._tag("video")
 
     @property
-    def audio(self) -> MixedTag:
+    def audio(self) -> MixedElement:
         return self._tag("audio")
 
     @property
-    def track(self) -> EmptyTag:
+    def track(self) -> EmptyElement:
         return self._empty_tag("track")
 
     @property
-    def map(self) -> MixedTag:
+    def map(self) -> MixedElement:
         return self._tag("map")
 
     @property
-    def area(self) -> EmptyTag:
+    def area(self) -> EmptyElement:
         return self._empty_tag("area")
 
     # Tabular data
 
     @property
-    def table(self) -> NoTextTag:
+    def table(self) -> NoTextElement:
         return self._no_text_tag("table")
 
     @property
-    def caption(self) -> MixedTag:
+    def caption(self) -> MixedElement:
         return self._tag("caption")
 
     @property
-    def colgroup(self) -> NoTextTag:
+    def colgroup(self) -> NoTextElement:
         return self._no_text_tag("colgroup")
 
     @property
-    def col(self) -> EmptyTag:
+    def col(self) -> EmptyElement:
         return self._empty_tag("col")
 
     @property
-    def tbody(self) -> NoTextTag:
+    def tbody(self) -> NoTextElement:
         return self._no_text_tag("tbody")
 
     @property
-    def thead(self) -> NoTextTag:
+    def thead(self) -> NoTextElement:
         return self._no_text_tag("thead")
 
     @property
-    def tfoot(self) -> NoTextTag:
+    def tfoot(self) -> NoTextElement:
         return self._no_text_tag("tfoot")
 
     @property
-    def tr(self) -> NoTextTag:
+    def tr(self) -> NoTextElement:
         return self._no_text_tag("tr")
 
     @property
-    def td(self) -> MixedTag:
+    def td(self) -> MixedElement:
         return self._tag("td")
 
     @property
-    def th(self) -> MixedTag:
+    def th(self) -> MixedElement:
         return self._tag("th")
 
     # Forms
 
     @property
-    def form(self) -> MixedTag:
+    def form(self) -> MixedElement:
         return self._tag("form")
 
     @property
-    def label(self) -> MixedTag:
+    def label(self) -> MixedElement:
         return self._tag("label")
 
     @property
-    def input(self) -> EmptyTag:
+    def input(self) -> EmptyElement:
         return self._empty_tag("input")
 
     @property
-    def button(self) -> MixedTag:
+    def button(self) -> MixedElement:
         return self._tag("button")
 
     @property
-    def select(self) -> NoTextTag:
+    def select(self) -> NoTextElement:
         return self._no_text_tag("select")
 
     @property
-    def datalist(self) -> MixedTag:
+    def datalist(self) -> MixedElement:
         return self._tag("datalist")
 
     @property
-    def optgroup(self) -> NoTextTag:
+    def optgroup(self) -> NoTextElement:
         return self._no_text_tag("optgroup")
 
     @property
-    def option(self) -> TextOnlyTag:
+    def option(self) -> TextOnlyElement:
         return self._text_only_tag("option")
 
     @property
-    def textarea(self) -> TextOnlyTag:
+    def textarea(self) -> TextOnlyElement:
         return self._text_only_tag("textarea")
 
     @property
-    def output(self) -> MixedTag:
+    def output(self) -> MixedElement:
         return self._tag("output")
 
     @property
-    def progress(self) -> MixedTag:
+    def progress(self) -> MixedElement:
         return self._tag("progress")
 
     @property
-    def meter(self) -> MixedTag:
+    def meter(self) -> MixedElement:
         return self._tag("meter")
 
     @property
-    def fieldset(self) -> MixedTag:
+    def fieldset(self) -> MixedElement:
         return self._tag("fieldset")
 
     @property
-    def legend(self) -> MixedTag:
+    def legend(self) -> MixedElement:
         return self._tag("legend")
 
     # Interactive elements
 
     @property
-    def details(self) -> MixedTag:
+    def details(self) -> MixedElement:
         return self._tag("details")
 
     @property
-    def summary(self) -> MixedTag:
+    def summary(self) -> MixedElement:
         return self._tag("summary")
 
     @property
-    def dialog(self) -> MixedTag:
+    def dialog(self) -> MixedElement:
         return self._tag("dialog")
 
     # Scripting
 
     @property
-    def script(self) -> TextOnlyTag:
+    def script(self) -> TextOnlyElement:
         return self._text_only_tag("script")
 
     @property
-    def noscript(self) -> MixedTag:
+    def noscript(self) -> MixedElement:
         return self._tag("noscript")
 
     @property
-    def template(self) -> MixedTag:
+    def template(self) -> MixedElement:
         return self._tag("template")
 
     @property
-    def slot(self) -> MixedTag:
+    def slot(self) -> MixedElement:
         return self._tag("slot")
 
     @property
-    def canvas(self) -> MixedTag:
+    def canvas(self) -> MixedElement:
         return self._tag("canvas")
 
 
-def tostring(root: Tag, doctype: str = "<!doctype html>") -> str:
+def tostring(root: Element, doctype: str = "<!doctype html>") -> str:
     """
     Format an HTML document with docstring.
     """
