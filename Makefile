@@ -17,6 +17,9 @@ test:
 typecheck:
 	mypy --strict ./src
 
+verifytypes:
+	pyright --ignoreexternal --verifytypes=minihtml
+
 requirements.txt: requirements.in
 	pip-compile
 
@@ -55,4 +58,4 @@ prepare-release: build test-sdist test-wheel
 clean:
 	rm -rf build dist venv-sdist venv-wheel
 
-.PHONY: all build init release test test-sdist test-wheel typecheck upgrade-deps
+.PHONY: all build init release test test-sdist test-wheel typecheck upgrade-deps verifytypes

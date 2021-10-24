@@ -34,6 +34,8 @@ class Element(Node):
     """
     Base class for all elements.
     """
+    name: str
+
     def __init__(
         self,
         name: str,
