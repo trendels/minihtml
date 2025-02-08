@@ -1,0 +1,58 @@
+[project]
+name = "minihtml"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Stanis Trendelenburg", email = "stanis.trendelenburg@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.11",
+    "pyright>=1.1.393",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
+    "ruff>=0.9.5",
+]
+
+[tool.ruff]
+include = [
+    "pyproject.toml",
+    "src/**/*.py",
+    "tests/**/*.py",
+]
+
+[tool.ruff.lint]
+extend-select = [
+    "I", # isort
+]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
+strict = ["src", "tests"]
+reportUnnecessaryTypeIgnoreComment = true
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+exclude_also = [
+    "@overload$",
+    "raise NotImplementedError",
+]
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+verbosity_assertions = 2
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
