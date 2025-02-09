@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from minihtml import make_prototype
+from minihtml import fragment, make_prototype
 
 
 def test_nested_block_elements_are_rendered_with_indentation():
@@ -114,4 +114,27 @@ def test_text_content_is_rendered_inline():
         <div>
           <span></span>hello
         </div>"""
+    )
+
+
+def test_rendering_fragments():
+    div = make_prototype("div")
+    span = make_prototype("span", inline=True)
+
+    frag1 = fragment(div(), span(), "test", div())
+
+    assert str(div(frag1)) == dedent(
+        """\
+        <div>
+          <div></div>
+          <span></span>test
+          <div></div>
+        </div>"""
+    )
+
+    assert str(frag1) == dedent(
+        """\
+        <div></div>
+        <span></span>test
+        <div></div>"""
     )

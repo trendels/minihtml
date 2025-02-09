@@ -1,5 +1,7 @@
 import io
-from typing import Literal, Self, TextIO, overload
+from collections.abc import Iterable, Iterator
+from textwrap import dedent
+from typing import Literal, Protocol, Self, TextIO, overload
 
 
 class Node:
@@ -12,6 +14,22 @@ class Node:
         buffer = io.StringIO()
         self.write(buffer)
         return buffer.getvalue()
+
+
+class HasNodes(Protocol):
+    def get_nodes(self) -> Iterable[Node]: ...  # pragma: no cover
+
+
+def iter_nodes(objects: Iterable[Node | HasNodes | str]) -> Iterator[Node]:
+    for obj in objects:
+        match obj:
+            case str(s):
+                yield Text(s)
+            case Node():
+                yield obj
+            case _:
+                for node in obj.get_nodes():
+                    yield node
 
 
 class Text(Node):
@@ -29,8 +47,8 @@ class Element(Node):
         self._children: list[Node] = []
         self._inline = inline
 
-    def __call__(self, *children: Node | str) -> Self:
-        self._children.extend([Text(c) if isinstance(c, str) else c for c in children])
+    def __call__(self, *children: Node | HasNodes | str) -> Self:
+        self._children.extend(iter_nodes(children))
         return self
 
     def write(self, f: TextIO, indent: int = 0) -> None:
@@ -65,12 +83,25 @@ class EmptyElement(Node):
             f.write(f"<{self._tag}></{self._tag}>")
 
 
+class fragment:
+    def __init__(self, *children: Node | HasNodes | str):
+        self._nodes = list(iter_nodes(children))
+
+    def get_nodes(self) -> Iterable[Node]:
+        return self._nodes
+
+    def __str__(self) -> str:
+        container = Element("__container__", inline=False)(*self._nodes)
+        html = str(container)
+        return dedent("\n".join(html.splitlines()[1:-1]))
+
+
 class Prototype:
     def __init__(self, tag: str, *, inline: bool):
         self._tag = tag
         self._inline = inline
 
-    def __call__(self, *children: Node | str) -> Element:
+    def __call__(self, *children: Node | HasNodes | str) -> Element:
         return Element(self._tag, inline=self._inline)(*children)
 
 
