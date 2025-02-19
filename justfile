@@ -1,3 +1,5 @@
+all: format typecheck test
+
 # Lint and format all code
 format:
     uv run ruff check --fix
