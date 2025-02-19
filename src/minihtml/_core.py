@@ -1,5 +1,7 @@
 import io
 from collections.abc import Iterable, Iterator
+from contextvars import ContextVar
+from dataclasses import dataclass
 from html import escape
 from textwrap import dedent
 from typing import Literal, Protocol, Self, TextIO, overload
@@ -54,8 +56,12 @@ class Element(Node):
         self._inline = inline
 
     def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Self:
+        register_with_context(self)
         self._attrs.update(attrs)
-        self._children.extend(iter_nodes(children))
+        child_nodes = list(iter_nodes(children))
+        for child in child_nodes:
+            deregister_from_context(child)
+        self._children.extend(child_nodes)
         return self
 
     def __getitem__(self, key: str) -> Self:
@@ -69,6 +75,15 @@ class Element(Node):
             old_names = self._attrs.get("class", "").split()
             self._attrs["class"] = " ".join(old_names + class_names)
         return self
+
+    def __enter__(self) -> Self:
+        push_element_context(self)
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        parent, children = pop_element_context()
+        assert parent is self
+        parent(*children)
 
     def write(self, f: TextIO, indent: int = 0) -> None:
         one_inline_child = len(self._children) == 1 and self._children[0]._inline
@@ -97,7 +112,8 @@ class EmptyElement(Node):
         self._omit_end_tag = omit_end_tag
         self._attrs: dict[str, str] = {}
 
-    def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Self:
+    def __call__(self, **attrs: str) -> Self:
+        register_with_context(self)
         self._attrs.update(attrs)
         return self
 
@@ -121,6 +137,45 @@ class EmptyElement(Node):
             f.write(f"<{self._tag}{attrs}></{self._tag}>")
 
 
+@dataclass(slots=True)
+class ElementContext:
+    parent: Element
+    collected_nodes: list[Node | HasNodes]
+    registered_nodes: set[Node | HasNodes]
+
+
+_context_stack = ContextVar[list[ElementContext]]("context_stack")
+
+
+def push_element_context(parent: Element) -> None:
+    ctx = ElementContext(parent=parent, collected_nodes=[], registered_nodes=set())
+    if stack := _context_stack.get(None):
+        stack.append(ctx)
+    else:
+        _context_stack.set([ctx])
+
+
+def pop_element_context() -> tuple[Element, list[Node | HasNodes]]:
+    ctx = _context_stack.get().pop()
+    return ctx.parent, [
+        node for node in ctx.collected_nodes if node in ctx.registered_nodes
+    ]
+
+
+def register_with_context(node: Node | HasNodes) -> None:
+    if stack := _context_stack.get(None):
+        ctx = stack[-1]
+        if node not in ctx.registered_nodes:
+            ctx.registered_nodes.add(node)
+            ctx.collected_nodes.append(node)
+
+
+def deregister_from_context(node: Node | HasNodes) -> None:
+    if stack := _context_stack.get(None):
+        ctx = stack[-1]
+        ctx.registered_nodes.discard(node)
+
+
 class fragment:
     def __init__(self, *children: Node | HasNodes | str):
         self._nodes = list(iter_nodes(children))
@@ -140,10 +195,21 @@ class Prototype:
         self._inline = inline
 
     def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Element:
-        return Element(self._tag, inline=self._inline)(*children, **attrs)
+        elem = Element(self._tag, inline=self._inline)(*children, **attrs)
+        register_with_context(elem)
+        return elem
 
     def __getitem__(self, key: str) -> Element:
         return Element(self._tag, inline=self._inline)[key]
+
+    def __enter__(self) -> Element:
+        elem = Element(self._tag, inline=self._inline)
+        push_element_context(elem)
+        return elem
+
+    def __exit__(self, *exc_info: object) -> None:
+        parent, children = pop_element_context()
+        parent(*children)
 
 
 class EmptyPrototype:

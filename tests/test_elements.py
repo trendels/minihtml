@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 from minihtml import make_prototype
 
 div = make_prototype("div")
@@ -46,3 +48,70 @@ def test_indexing_sets_hashtag_id():
     assert str(div["green #blue"]) == '<div id="blue" class="green"></div>'
     assert str(div["green #blue #red"]) == '<div id="red" class="green"></div>'
     assert str(img["#my-id"]) == '<img id="my-id">'
+
+
+def test_calling_prototype_in_element_context_adds_child_element():
+    with div as elem:
+        span("hello")
+
+    assert str(elem) == "<div><span>hello</span></div>"
+
+    with div["myclass"] as elem:
+        span("hello")(" again")
+
+    assert str(elem) == '<div class="myclass"><span>hello again</span></div>'
+
+    with div["myclass"] as elem:
+        img(src="hello.png")
+
+    assert str(elem) == '<div class="myclass"><img src="hello.png"></div>'
+
+
+def test_calling_element_in_element_context_adds_child_element():
+    with div as elem:
+        span["test"]("hello")
+
+    assert str(elem) == '<div><span class="test">hello</span></div>'
+
+    with div["myclass"] as elem:
+        span["test"]("hello again")
+
+    assert (
+        str(elem) == '<div class="myclass"><span class="test">hello again</span></div>'
+    )
+
+    with div["myclass"] as elem:
+        img["test"](src="hello.png")
+
+    assert str(elem) == '<div class="myclass"><img class="test" src="hello.png"></div>'
+
+
+def test_elements_used_as_positional_args_are_not_added_twice():
+    with div as elem:
+        div["nested"](span("hello"))
+
+    assert str(elem) == dedent("""\
+        <div>
+          <div class="nested"><span>hello</span></div>
+        </div>""")
+
+    with div["myclass"] as elem:
+        div["nested"](span("hello")(" again"))
+
+    assert str(elem) == dedent("""\
+        <div class="myclass">
+          <div class="nested"><span>hello again</span></div>
+        </div>""")
+
+
+def test_context_managers_can_be_nested():
+    with div["outer"] as elem:
+        with div, div["inner"]:
+            span("hello")
+
+    assert str(elem) == dedent("""\
+        <div class="outer">
+          <div>
+            <div class="inner"><span>hello</span></div>
+          </div>
+        </div>""")
