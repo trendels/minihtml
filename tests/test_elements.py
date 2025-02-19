@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from minihtml import make_prototype
+from minihtml import make_prototype, safe, text
 
 div = make_prototype("div")
 span = make_prototype("span", inline=True)
@@ -114,4 +114,15 @@ def test_context_managers_can_be_nested():
           <div>
             <div class="inner"><span>hello</span></div>
           </div>
+        </div>""")
+
+
+def test_context_manager_with_text_content():
+    with div as elem:
+        text("hello")
+        safe("<!-- this is a comment -->")
+
+    assert str(elem) == dedent("""\
+        <div>
+          hello<!-- this is a comment -->
         </div>""")

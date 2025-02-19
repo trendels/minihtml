@@ -36,12 +36,28 @@ def iter_nodes(objects: Iterable[Node | HasNodes | str]) -> Iterator[Node]:
 
 
 class Text(Node):
-    def __init__(self, text: str):
-        self._text = text
+    def __init__(self, s: str, escape: bool = True):
+        self._text = s
         self._inline = True
+        self._escape = escape
 
     def write(self, f: TextIO, indent: int = 0) -> None:
-        f.write(escape(self._text, quote=False))
+        if self._escape:
+            f.write(escape(self._text, quote=False))
+        else:
+            f.write(self._text)
+
+
+def text(s: str) -> Text:
+    node = Text(s)
+    register_with_context(node)
+    return node
+
+
+def safe(s: str) -> Text:
+    node = Text(s, escape=False)
+    register_with_context(node)
+    return node
 
 
 def _format_attrs(attrs: dict[str, str]) -> str:
