@@ -65,6 +65,42 @@ def _format_attrs(attrs: dict[str, str]) -> str:
 
 
 class Element(Node):
+    _attrs: dict[str, str]
+
+    def __getitem__(self, key: str) -> Self:
+        class_names: list[str] = []
+        for name in key.split():
+            if name[0] == "#":
+                self._attrs["id"] = name[1:]
+            else:
+                class_names.append(name)
+        if class_names:
+            old_names = self._attrs.get("class", "").split()
+            self._attrs["class"] = " ".join(old_names + class_names)
+        return self
+
+
+class ElementEmpty(Element):
+    def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
+        self._tag = tag
+        self._inline = inline
+        self._omit_end_tag = omit_end_tag
+        self._attrs: dict[str, str] = {}
+
+    def __call__(self, **attrs: str) -> Self:
+        register_with_context(self)
+        self._attrs.update(attrs)
+        return self
+
+    def write(self, f: TextIO, indent: int = 0) -> None:
+        attrs = f" {_format_attrs(self._attrs)}" if self._attrs else ""
+        if self._omit_end_tag:
+            f.write(f"<{self._tag}{attrs}>")
+        else:
+            f.write(f"<{self._tag}{attrs}></{self._tag}>")
+
+
+class ElementNonEmpty(Element):
     def __init__(self, tag: str, *, inline: bool):
         self._tag = tag
         self._attrs: dict[str, str] = {}
@@ -78,18 +114,6 @@ class Element(Node):
         for child in child_nodes:
             deregister_from_context(child)
         self._children.extend(child_nodes)
-        return self
-
-    def __getitem__(self, key: str) -> Self:
-        class_names: list[str] = []
-        for name in key.split():
-            if name[0] == "#":
-                self._attrs["id"] = name[1:]
-            else:
-                class_names.append(name)
-        if class_names:
-            old_names = self._attrs.get("class", "").split()
-            self._attrs["class"] = " ".join(old_names + class_names)
         return self
 
     def __enter__(self) -> Self:
@@ -121,41 +145,9 @@ class Element(Node):
         f.write(f"</{self._tag}>")
 
 
-class EmptyElement(Node):
-    def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
-        self._tag = tag
-        self._inline = inline
-        self._omit_end_tag = omit_end_tag
-        self._attrs: dict[str, str] = {}
-
-    def __call__(self, **attrs: str) -> Self:
-        register_with_context(self)
-        self._attrs.update(attrs)
-        return self
-
-    def __getitem__(self, key: str) -> Self:
-        class_names: list[str] = []
-        for name in key.split():
-            if name[0] == "#":
-                self._attrs["id"] = name[1:]
-            else:
-                class_names.append(name)
-        if class_names:
-            old_names = self._attrs.get("class", "").split()
-            self._attrs["class"] = " ".join(old_names + class_names)
-        return self
-
-    def write(self, f: TextIO, indent: int = 0) -> None:
-        attrs = f" {_format_attrs(self._attrs)}" if self._attrs else ""
-        if self._omit_end_tag:
-            f.write(f"<{self._tag}{attrs}>")
-        else:
-            f.write(f"<{self._tag}{attrs}></{self._tag}>")
-
-
 @dataclass(slots=True)
 class ElementContext:
-    parent: Element
+    parent: ElementNonEmpty
     collected_nodes: list[Node | HasNodes]
     registered_nodes: set[Node | HasNodes]
 
@@ -163,7 +155,7 @@ class ElementContext:
 _context_stack = ContextVar[list[ElementContext]]("context_stack")
 
 
-def push_element_context(parent: Element) -> None:
+def push_element_context(parent: ElementNonEmpty) -> None:
     ctx = ElementContext(parent=parent, collected_nodes=[], registered_nodes=set())
     if stack := _context_stack.get(None):
         stack.append(ctx)
@@ -171,7 +163,7 @@ def push_element_context(parent: Element) -> None:
         _context_stack.set([ctx])
 
 
-def pop_element_context() -> tuple[Element, list[Node | HasNodes]]:
+def pop_element_context() -> tuple[ElementNonEmpty, list[Node | HasNodes]]:
     ctx = _context_stack.get().pop()
     return ctx.parent, [
         node for node in ctx.collected_nodes if node in ctx.registered_nodes
@@ -200,26 +192,45 @@ class fragment:
         return self._nodes
 
     def __str__(self) -> str:
-        container = Element("__container__", inline=False)(*self._nodes)
+        container = ElementNonEmpty("__container__", inline=False)(*self._nodes)
         html = str(container)
         return dedent("\n".join(html.splitlines()[1:-1]))
 
 
-class Prototype:
+class PrototypeEmpty:
+    def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
+        self._tag = tag
+        self._inline = inline
+        self._omit_end_tag = omit_end_tag
+
+    def __call__(self, **attrs: str) -> ElementEmpty:
+        return ElementEmpty(
+            self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
+        )(**attrs)
+
+    def __getitem__(self, key: str) -> ElementEmpty:
+        return ElementEmpty(
+            self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
+        )[key]
+
+
+class PrototypeNonEmpty:
     def __init__(self, tag: str, *, inline: bool):
         self._tag = tag
         self._inline = inline
 
-    def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Element:
-        elem = Element(self._tag, inline=self._inline)(*children, **attrs)
+    def __call__(
+        self, *children: Node | HasNodes | str, **attrs: str
+    ) -> ElementNonEmpty:
+        elem = ElementNonEmpty(self._tag, inline=self._inline)(*children, **attrs)
         register_with_context(elem)
         return elem
 
-    def __getitem__(self, key: str) -> Element:
-        return Element(self._tag, inline=self._inline)[key]
+    def __getitem__(self, key: str) -> ElementNonEmpty:
+        return ElementNonEmpty(self._tag, inline=self._inline)[key]
 
-    def __enter__(self) -> Element:
-        elem = Element(self._tag, inline=self._inline)
+    def __enter__(self) -> ElementNonEmpty:
+        elem = ElementNonEmpty(self._tag, inline=self._inline)
         push_element_context(elem)
         return elem
 
@@ -228,42 +239,25 @@ class Prototype:
         parent(*children)
 
 
-class EmptyPrototype:
-    def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
-        self._tag = tag
-        self._inline = inline
-        self._omit_end_tag = omit_end_tag
-
-    def __call__(self, **attrs: str) -> EmptyElement:
-        return EmptyElement(
-            self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
-        )(**attrs)
-
-    def __getitem__(self, key: str) -> EmptyElement:
-        return EmptyElement(
-            self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
-        )[key]
-
-
 @overload
-def make_prototype(tag: str, *, inline: bool = ...) -> Prototype: ...
+def make_prototype(tag: str, *, inline: bool = ...) -> PrototypeNonEmpty: ...
 
 
 @overload
 def make_prototype(
     tag: str, *, inline: bool = ..., empty: Literal[False]
-) -> Prototype: ...
+) -> PrototypeNonEmpty: ...
 
 
 @overload
 def make_prototype(
     tag: str, *, inline: bool = ..., empty: Literal[True], omit_end_tag: bool = ...
-) -> EmptyPrototype: ...
+) -> PrototypeEmpty: ...
 
 
 def make_prototype(
     tag: str, *, inline: bool = False, empty: bool = False, omit_end_tag: bool = False
-) -> Prototype | EmptyPrototype:
+) -> PrototypeNonEmpty | PrototypeEmpty:
     if empty:
-        return EmptyPrototype(tag, inline=inline, omit_end_tag=omit_end_tag)
-    return Prototype(tag, inline=inline)
+        return PrototypeEmpty(tag, inline=inline, omit_end_tag=omit_end_tag)
+    return PrototypeNonEmpty(tag, inline=inline)
