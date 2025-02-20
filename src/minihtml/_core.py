@@ -11,6 +11,10 @@ from typing import Literal, Protocol, Self, TextIO, overload
 ATTRIBUTE_NAME_RE = re.compile(r"^[a-zA-Z0-9!#$%()*+,.:?@\[\]^_`{|}~-]+$")
 
 
+class CircularReferenceError(Exception):
+    pass
+
+
 class Node:
     _inline: bool
 
@@ -147,23 +151,37 @@ class ElementNonEmpty(Element):
         parent(*children)
 
     def write(self, f: TextIO, indent: int = 0) -> None:
-        one_inline_child = len(self._children) == 1 and self._children[0]._inline
-        inline_mode = self._inline or one_inline_child
-        first_child_is_block = self._children and not self._children[0]._inline
-        indent_next_child = not inline_mode or first_child_is_block
+        ids_seen = _rendering_context.get(None)
+        if ids_seen is not None:
+            if id(self) in ids_seen:
+                raise CircularReferenceError
+            ids_seen.add(id(self))
+        else:
+            ids_seen = {
+                id(self),
+            }
+            _rendering_context.set(ids_seen)
 
-        attrs = f" {_format_attrs(self._attrs)}" if self._attrs else ""
-        f.write(f"<{self._tag}{attrs}>")
-        for node in self._children:
-            if indent_next_child or not node._inline:
-                f.write(f"\n{'  ' * (indent + 1)}")
-            node.write(f, indent + 1)
-            indent_next_child = not node._inline
+        try:
+            one_inline_child = len(self._children) == 1 and self._children[0]._inline
+            inline_mode = self._inline or one_inline_child
+            first_child_is_block = self._children and not self._children[0]._inline
+            indent_next_child = not inline_mode or first_child_is_block
 
-        if self._children and (indent_next_child or not inline_mode):
-            f.write(f"\n{'  ' * indent}")
+            attrs = f" {_format_attrs(self._attrs)}" if self._attrs else ""
+            f.write(f"<{self._tag}{attrs}>")
+            for node in self._children:
+                if indent_next_child or not node._inline:
+                    f.write(f"\n{'  ' * (indent + 1)}")
+                node.write(f, indent + 1)
+                indent_next_child = not node._inline
 
-        f.write(f"</{self._tag}>")
+            if self._children and (indent_next_child or not inline_mode):
+                f.write(f"\n{'  ' * indent}")
+
+            f.write(f"</{self._tag}>")
+        finally:
+            ids_seen.remove(id(self))
 
 
 @dataclass(slots=True)
@@ -174,6 +192,7 @@ class ElementContext:
 
 
 _context_stack = ContextVar[list[ElementContext]]("context_stack")
+_rendering_context = ContextVar[set[int]]("rendering_context")
 
 
 def push_element_context(parent: ElementNonEmpty) -> None:

@@ -1,6 +1,7 @@
-from ._core import fragment, make_prototype, safe, text
+from ._core import CircularReferenceError, fragment, make_prototype, safe, text
 
 __all__ = [
+    "CircularReferenceError",
     "fragment",
     "make_prototype",
     "safe",

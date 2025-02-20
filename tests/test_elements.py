@@ -3,7 +3,7 @@ from textwrap import dedent
 import pytest
 from pytest import raises as assert_raises
 
-from minihtml import make_prototype, safe, text
+from minihtml import CircularReferenceError, make_prototype, safe, text
 
 div = make_prototype("div")
 span = make_prototype("span", inline=True)
@@ -184,3 +184,17 @@ def test_context_manager_with_text_content():
         <div>
           hello<!-- this is a comment -->
         </div>""")
+
+
+def test_circular_reference_raises_error_when_rendering():
+    elem = div()
+    elem(elem)
+
+    with assert_raises(CircularReferenceError):
+        str(elem)
+
+    with div() as elem2:
+        elem2()
+
+    with assert_raises(CircularReferenceError):
+        str(elem2)
