@@ -1,6 +1,7 @@
 from textwrap import dedent
 
 import pytest
+from pytest import raises as assert_raises
 
 from minihtml import make_prototype, safe, text
 
@@ -49,6 +50,31 @@ def test_attribute_values_are_escaped():
         str(div(title='hello"<world>&'))
         == '<div title="hello&quot;&lt;world&gt;&amp;"></div>'
     )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "",
+        " ",
+        '"',
+        "'",
+        "/",
+        "=",
+        ">",
+        "a a",
+        'a"a',
+        "a'a",
+        "a/a",
+        "a>a",
+    ],
+)
+def test_attribute_names_are_validated(name: str):
+    with assert_raises(ValueError, match=f"Invalid attribute name: {name!r}"):
+        div(**{name: "test"})
+
+    with assert_raises(ValueError, match=f"Invalid attribute name: {name!r}"):
+        img(**{name: "test"})
 
 
 def test_text_contend_is_escaped():

@@ -1,10 +1,14 @@
 import io
+import re
 from collections.abc import Iterable, Iterator
 from contextvars import ContextVar
 from dataclasses import dataclass
 from html import escape
 from textwrap import dedent
 from typing import Literal, Protocol, Self, TextIO, overload
+
+# We also disallow '&', '<', ';'
+ATTRIBUTE_NAME_RE = re.compile(r"^[a-zA-Z0-9!#$%()*+,.:?@\[\]^_`{|}~-]+$")
 
 
 class Node:
@@ -88,13 +92,17 @@ class ElementEmpty(Element):
         self._attrs: dict[str, str] = {}
 
     def __call__(self, **attrs: str) -> Self:
-        register_with_context(self)
-        self._attrs.update(
-            {
+        if attrs:
+            _attrs = {
                 k if k == "_" else k.rstrip("_").replace("_", "-"): v
                 for k, v in attrs.items()
             }
-        )
+            for name in _attrs:
+                if not ATTRIBUTE_NAME_RE.fullmatch(name):
+                    raise ValueError(f"Invalid attribute name: {name!r}")
+            self._attrs.update(_attrs)
+
+        register_with_context(self)
         return self
 
     def write(self, f: TextIO, indent: int = 0) -> None:
@@ -113,17 +121,22 @@ class ElementNonEmpty(Element):
         self._inline = inline
 
     def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Self:
-        register_with_context(self)
-        self._attrs.update(
-            {
+        if attrs:
+            _attrs = {
                 k if k == "_" else k.rstrip("_").replace("_", "-"): v
                 for k, v in attrs.items()
             }
-        )
+            for name in _attrs:
+                if not ATTRIBUTE_NAME_RE.fullmatch(name):
+                    raise ValueError(f"Invalid attribute name: {name!r}")
+            self._attrs.update(_attrs)
+
         child_nodes = list(iter_nodes(children))
         for child in child_nodes:
             deregister_from_context(child)
         self._children.extend(child_nodes)
+
+        register_with_context(self)
         return self
 
     def __enter__(self) -> Self:
