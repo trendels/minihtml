@@ -89,7 +89,7 @@ class Element(Node):
 
 
 class ElementEmpty(Element):
-    def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
+    def __init__(self, tag: str, *, inline: bool = False, omit_end_tag: bool):
         self._tag = tag
         self._inline = inline
         self._omit_end_tag = omit_end_tag
@@ -117,7 +117,7 @@ class ElementEmpty(Element):
 
 
 class ElementNonEmpty(Element):
-    def __init__(self, tag: str, *, inline: bool):
+    def __init__(self, tag: str, *, inline: bool = False):
         self._tag = tag
         self._attrs: dict[str, str] = {}
         self._children: list[Node] = []
@@ -224,17 +224,35 @@ def deregister_from_context(node: Node | HasNodes) -> None:
         ctx.registered_nodes.discard(node)
 
 
-class fragment:
-    def __init__(self, *children: Node | HasNodes | str):
-        self._nodes = list(iter_nodes(children))
+class Fragment:
+    def __init__(self, *content: Node | HasNodes | str):
+        self._content = list(content)
+        self._capture = None
 
     def get_nodes(self) -> Iterable[Node]:
-        return self._nodes
+        return iter_nodes(self._content)
+
+    def __enter__(self) -> Self:
+        self._capture = ElementNonEmpty("__capture__")
+        push_element_context(self._capture)
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        assert self._capture is not None
+        parent, children = pop_element_context()
+        assert parent is self._capture
+        self._content.extend(children)
 
     def __str__(self) -> str:
-        container = ElementNonEmpty("__container__", inline=False)(*self._nodes)
+        container = ElementNonEmpty("__container__", inline=False)(*self._content)
         html = str(container)
         return dedent("\n".join(html.splitlines()[1:-1]))
+
+
+def fragment(*content: Node | HasNodes | str) -> Fragment:
+    f = Fragment(*content)
+    register_with_context(f)
+    return f
 
 
 class PrototypeEmpty:
