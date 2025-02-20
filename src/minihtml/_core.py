@@ -163,8 +163,7 @@ class ElementNonEmpty(Element):
             _rendering_context.set(ids_seen)
 
         try:
-            one_inline_child = len(self._children) == 1 and self._children[0]._inline
-            inline_mode = self._inline or one_inline_child
+            inline_mode = self._inline or all([c._inline for c in self._children])
             first_child_is_block = self._children and not self._children[0]._inline
             indent_next_child = not inline_mode or first_child_is_block
 

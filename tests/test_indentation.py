@@ -33,12 +33,7 @@ def test_consecutive_inline_children_of_block_elements_are_rendered_without_inde
     div = make_prototype("div")
     span = make_prototype("span", inline=True)
 
-    assert str(div(span(), span())) == dedent(
-        """\
-        <div>
-          <span></span><span></span>
-        </div>"""
-    )
+    assert str(div(span(), span())) == dedent("<div><span></span><span></span></div>")
 
 
 def test_a_single_inline_child_of_a_block_element_is_rendered_without_indentation():
@@ -88,12 +83,7 @@ def test_empty_elements_with_and_without_end_tag():
 
     assert str(img()) == "<img>"
     assert str(iframe()) == "<iframe></iframe>"
-    assert str(div(img(), img())) == dedent(
-        """\
-        <div>
-          <img><img>
-        </div>"""
-    )
+    assert str(div(img(), img())) == "<div><img><img></div>"
     assert str(div(iframe(), iframe())) == dedent(
         """\
         <div>
@@ -109,12 +99,7 @@ def test_text_content_is_rendered_inline():
 
     assert str(div("hello")) == "<div>hello</div>"
     assert str(span("hello")) == "<span>hello</span>"
-    assert str(div(span(), "hello")) == dedent(
-        """\
-        <div>
-          <span></span>hello
-        </div>"""
-    )
+    assert str(div(span(), "hello")) == "<div><span></span>hello</div>"
 
 
 def test_rendering_fragments():

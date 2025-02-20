@@ -180,10 +180,7 @@ def test_context_manager_with_text_content():
         text("hello")
         safe("<!-- this is a comment -->")
 
-    assert str(elem) == dedent("""\
-        <div>
-          hello<!-- this is a comment -->
-        </div>""")
+    assert str(elem) == "<div>hello<!-- this is a comment --></div>"
 
 
 def test_circular_reference_raises_error_when_rendering():
