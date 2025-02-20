@@ -45,6 +45,18 @@ def test_attribute_name_mangling(kwarg: str, attribute: str):
     assert str(img(**{kwarg: "test"})) == f'<img {attribute}="test">'
 
 
+def test_boolean_attributes():
+    assert str(div(enabled=True)) == '<div enabled="enabled"></div>'
+    assert str(div(enabled=False)) == "<div></div>"
+    assert str(div(_=True)) == '<div _="_"></div>'
+    assert str(div(_=False)) == "<div></div>"
+
+    assert str(img(enabled=True)) == '<img enabled="enabled">'
+    assert str(img(enabled=False)) == "<img>"
+    assert str(img(_=True)) == '<img _="_">'
+    assert str(img(_=False)) == "<img>"
+
+
 def test_attribute_values_are_escaped():
     assert (
         str(div(title='hello"<world>&'))

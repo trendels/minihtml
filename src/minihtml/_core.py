@@ -91,16 +91,15 @@ class ElementEmpty(Element):
         self._omit_end_tag = omit_end_tag
         self._attrs: dict[str, str] = {}
 
-    def __call__(self, **attrs: str) -> Self:
-        if attrs:
-            _attrs = {
-                k if k == "_" else k.rstrip("_").replace("_", "-"): v
-                for k, v in attrs.items()
-            }
-            for name in _attrs:
-                if not ATTRIBUTE_NAME_RE.fullmatch(name):
-                    raise ValueError(f"Invalid attribute name: {name!r}")
-            self._attrs.update(_attrs)
+    def __call__(self, **attrs: str | bool) -> Self:
+        for name, value in attrs.items():
+            name = name if name == "_" else name.rstrip("_").replace("_", "-")
+            if not ATTRIBUTE_NAME_RE.fullmatch(name):
+                raise ValueError(f"Invalid attribute name: {name!r}")
+            if value is True:
+                self._attrs[name] = name
+            elif value is not False:
+                self._attrs[name] = value
 
         register_with_context(self)
         return self
@@ -120,16 +119,15 @@ class ElementNonEmpty(Element):
         self._children: list[Node] = []
         self._inline = inline
 
-    def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Self:
-        if attrs:
-            _attrs = {
-                k if k == "_" else k.rstrip("_").replace("_", "-"): v
-                for k, v in attrs.items()
-            }
-            for name in _attrs:
-                if not ATTRIBUTE_NAME_RE.fullmatch(name):
-                    raise ValueError(f"Invalid attribute name: {name!r}")
-            self._attrs.update(_attrs)
+    def __call__(self, *children: Node | HasNodes | str, **attrs: str | bool) -> Self:
+        for name, value in attrs.items():
+            name = name if name == "_" else name.rstrip("_").replace("_", "-")
+            if not ATTRIBUTE_NAME_RE.fullmatch(name):
+                raise ValueError(f"Invalid attribute name: {name!r}")
+            if value is True:
+                self._attrs[name] = name
+            elif value is not False:
+                self._attrs[name] = value
 
         child_nodes = list(iter_nodes(children))
         for child in child_nodes:
@@ -226,7 +224,7 @@ class PrototypeEmpty:
         self._inline = inline
         self._omit_end_tag = omit_end_tag
 
-    def __call__(self, **attrs: str) -> ElementEmpty:
+    def __call__(self, **attrs: str | bool) -> ElementEmpty:
         return ElementEmpty(
             self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
         )(**attrs)
@@ -243,7 +241,7 @@ class PrototypeNonEmpty:
         self._inline = inline
 
     def __call__(
-        self, *children: Node | HasNodes | str, **attrs: str
+        self, *children: Node | HasNodes | str, **attrs: str | bool
     ) -> ElementNonEmpty:
         elem = ElementNonEmpty(self._tag, inline=self._inline)(*children, **attrs)
         register_with_context(elem)
