@@ -89,7 +89,12 @@ class ElementEmpty(Element):
 
     def __call__(self, **attrs: str) -> Self:
         register_with_context(self)
-        self._attrs.update(attrs)
+        self._attrs.update(
+            {
+                k if k == "_" else k.rstrip("_").replace("_", "-"): v
+                for k, v in attrs.items()
+            }
+        )
         return self
 
     def write(self, f: TextIO, indent: int = 0) -> None:
@@ -109,7 +114,12 @@ class ElementNonEmpty(Element):
 
     def __call__(self, *children: Node | HasNodes | str, **attrs: str) -> Self:
         register_with_context(self)
-        self._attrs.update(attrs)
+        self._attrs.update(
+            {
+                k if k == "_" else k.rstrip("_").replace("_", "-"): v
+                for k, v in attrs.items()
+            }
+        )
         child_nodes = list(iter_nodes(children))
         for child in child_nodes:
             deregister_from_context(child)

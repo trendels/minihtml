@@ -1,5 +1,7 @@
 from textwrap import dedent
 
+import pytest
+
 from minihtml import make_prototype, safe, text
 
 div = make_prototype("div")
@@ -22,6 +24,24 @@ def test_positional_args_are_children():
 def test_keyword_args_are_attributes():
     assert str(div(title="hello")) == '<div title="hello"></div>'
     assert str(img(src="hello.png")) == '<img src="hello.png">'
+
+
+@pytest.mark.parametrize(
+    ("kwarg", "attribute"),
+    [
+        ("foo", "foo"),
+        ("foo_bar", "foo-bar"),
+        ("foo__bar", "foo--bar"),
+        ("_foo", "-foo"),
+        ("__foo", "--foo"),
+        ("foo_", "foo"),
+        ("foo__", "foo"),
+        ("_", "_"),
+    ],
+)
+def test_attribute_name_mangling(kwarg: str, attribute: str):
+    assert str(div(**{kwarg: "test"})) == f'<div {attribute}="test"></div>'
+    assert str(img(**{kwarg: "test"})) == f'<img {attribute}="test">'
 
 
 def test_attribute_values_are_escaped():
