@@ -1,6 +1,5 @@
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
-from textwrap import dedent
 from typing import Callable, Concatenate, Generic, ParamSpec, Self, TypeAlias
 
 from ._core import (
@@ -94,12 +93,7 @@ class Component:
         return self._cached_nodes
 
     def __str__(self) -> str:
-        capture = ElementNonEmpty("__capture__")
-        push_element_context(capture)
-        container = ElementNonEmpty("__container__", inline=False)(*self.get_nodes())
-        pop_element_context()
-        html = str(container)
-        return dedent("\n".join(html.splitlines()[1:-1]))
+        return Node.render_list(self.get_nodes())
 
 
 class ComponentWrapper(Generic[P]):

@@ -4,7 +4,7 @@ from collections.abc import Iterable, Iterator
 from contextvars import ContextVar
 from dataclasses import dataclass
 from html import escape
-from textwrap import dedent
+from itertools import zip_longest
 from typing import Literal, Protocol, Self, TextIO, overload
 
 # We also disallow '&', '<', ';'
@@ -25,6 +25,17 @@ class Node:
         buffer = io.StringIO()
         self.write(buffer)
         return buffer.getvalue()
+
+    @staticmethod
+    def render_list(nodes: Iterable["Node"]) -> str:
+        node_list = list(nodes)
+        buf = io.StringIO()
+        for node, next_ in zip_longest(node_list, node_list[1:]):
+            node.write(buf)
+            if next_ is not None:
+                if node._inline != next_._inline or not (node._inline or next_._inline):
+                    buf.write("\n")
+        return buf.getvalue()
 
 
 class HasNodes(Protocol):
@@ -241,12 +252,7 @@ class Fragment:
         self._content.extend(children)
 
     def __str__(self) -> str:
-        capture = ElementNonEmpty("__capture__")
-        push_element_context(capture)
-        container = ElementNonEmpty("__container__", inline=False)(*self._content)
-        pop_element_context()
-        html = str(container)
-        return dedent("\n".join(html.splitlines()[1:-1]))
+        return Node.render_list(self.get_nodes())
 
 
 def fragment(*content: Node | HasNodes | str) -> Fragment:
