@@ -27,15 +27,13 @@ class Node:
         return buffer.getvalue()
 
     @staticmethod
-    def render_list(nodes: Iterable["Node"]) -> str:
+    def render_list(f: TextIO, nodes: Iterable["Node"]) -> None:
         node_list = list(nodes)
-        buf = io.StringIO()
         for node, next_ in zip_longest(node_list, node_list[1:]):
-            node.write(buf)
+            node.write(f)
             if next_ is not None:
                 if node._inline != next_._inline or not (node._inline or next_._inline):
-                    buf.write("\n")
-        return buf.getvalue()
+                    f.write("\n")
 
 
 class HasNodes(Protocol):
@@ -252,7 +250,9 @@ class Fragment:
         self._content.extend(children)
 
     def __str__(self) -> str:
-        return Node.render_list(self.get_nodes())
+        buf = io.StringIO()
+        Node.render_list(buf, self.get_nodes())
+        return buf.getvalue()
 
 
 def fragment(*content: Node | HasNodes | str) -> Fragment:

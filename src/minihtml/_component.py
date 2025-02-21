@@ -1,3 +1,4 @@
+import io
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from typing import Callable, Concatenate, Generic, ParamSpec, Self, TypeAlias
@@ -93,7 +94,9 @@ class Component:
         return self._cached_nodes
 
     def __str__(self) -> str:
-        return Node.render_list(self.get_nodes())
+        buf = io.StringIO()
+        Node.render_list(buf, self.get_nodes())
+        return buf.getvalue()
 
 
 class ComponentWrapper(Generic[P]):

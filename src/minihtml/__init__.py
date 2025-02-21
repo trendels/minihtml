@@ -1,4 +1,4 @@
-from ._component import Slots, component
+from ._component import Component, ComponentWrapper, SlotContext, Slots, component
 from ._core import (
     CircularReferenceError,
     Element,
@@ -13,6 +13,7 @@ from ._core import (
     safe,
     text,
 )
+from ._template import template
 
 __all__ = [
     "CircularReferenceError",
@@ -29,4 +30,8 @@ __all__ = [
     "make_prototype",
     "safe",
     "text",
+    "template",
+    "Component",
+    "ComponentWrapper",
+    "SlotContext",
 ]
