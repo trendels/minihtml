@@ -35,6 +35,9 @@ include = [
 extend-select = [
     "I", # isort
 ]
+ignore = [
+    "E731", # lambda assignment
+]
 
 [tool.pyright]
 venvPath = "."

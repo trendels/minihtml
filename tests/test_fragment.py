@@ -40,3 +40,14 @@ def test_can_use_fragment_in_context_manager():
         fragment("hi there")
 
     assert str(elem) == "<div>hi there</div>"
+
+
+def test_stringifying_fragment_has_no_side_effect():
+    f = fragment()
+    with f:
+        p("content")
+
+    with div as elem:
+        str(f)
+
+    assert str(elem) == "<div></div>"

@@ -226,7 +226,6 @@ def deregister_from_context(node: Node | HasNodes) -> None:
 class Fragment:
     def __init__(self, *content: Node | HasNodes | str):
         self._content = list(content)
-        self._capture = None
 
     def get_nodes(self) -> Iterable[Node]:
         return iter_nodes(self._content)
@@ -237,13 +236,15 @@ class Fragment:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
-        assert self._capture is not None
         parent, children = pop_element_context()
         assert parent is self._capture
         self._content.extend(children)
 
     def __str__(self) -> str:
+        capture = ElementNonEmpty("__capture__")
+        push_element_context(capture)
         container = ElementNonEmpty("__container__", inline=False)(*self._content)
+        pop_element_context()
         html = str(container)
         return dedent("\n".join(html.splitlines()[1:-1]))
 

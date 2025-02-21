@@ -1,3 +1,4 @@
+from ._component import Slots, component
 from ._core import (
     CircularReferenceError,
     Element,
@@ -21,7 +22,9 @@ __all__ = [
     "Fragment",
     "PrototypeEmpty",
     "PrototypeNonEmpty",
+    "Slots",
     "Text",
+    "component",
     "fragment",
     "make_prototype",
     "safe",
