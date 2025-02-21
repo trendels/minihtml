@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from minihtml._core import Element
+from minihtml import Element
 from minihtml.tags import a, body, h1, head, html, p, title
 
 

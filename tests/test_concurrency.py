@@ -1,8 +1,7 @@
 import asyncio
 from textwrap import dedent
 
-from minihtml import make_prototype
-from minihtml._core import Element
+from minihtml import Element, make_prototype
 
 div = make_prototype("div")
 

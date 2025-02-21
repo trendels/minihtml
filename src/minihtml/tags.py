@@ -1,5 +1,4 @@
-from minihtml import make_prototype
-from minihtml._core import PrototypeEmpty, PrototypeNonEmpty
+from minihtml import PrototypeEmpty, PrototypeNonEmpty, make_prototype
 
 __all__ = [
     # [[[cog
