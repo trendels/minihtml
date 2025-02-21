@@ -1,0 +1,222 @@
+# Source: https://html.spec.whatwg.org/
+tags:
+  #
+  # The document element
+  #
+  html:
+
+  #
+  # Document metadata
+  #
+  head:
+  title:
+  base:
+    empty: true
+    omit_end_tag: true
+  link:
+    empty: true
+    omit_end_tag: true
+  meta:
+    empty: true
+    omit_end_tag: true
+  style:
+
+  #
+  # Sections
+  #
+  body:
+  article:
+  section:
+  nav:
+  aside:
+  h1:
+  h2:
+  h3:
+  h4:
+  h5:
+  h6:
+  hgroup:
+  header:
+  footer:
+  address:
+
+  #
+  # Grouping content
+  #
+  p:
+  hr:
+    empty: true
+    omit_end_tag: true
+  pre:
+  blockquote:
+  ol:
+  ul:
+  menu:
+  li:
+  dl:
+  dt:
+  dd:
+  figure:
+  figcaption:
+  main:
+  search:
+  div:
+
+  #
+  # Text-level semantics
+  #
+  a:
+    inline: true
+  em:
+    inline: true
+  strong:
+    inline: true
+  small:
+    inline: true
+  s:
+    inline: true
+  cite:
+    inline: true
+  q:
+    inline: true
+  dfn:
+    inline: true
+  abbr:
+    inline: true
+  ruby:
+    inline: true
+  rt:
+    inline: true
+  rp:
+    inline: true
+  data:
+    inline: true
+  time:
+    inline: true
+  code:
+    inline: true
+  var:
+    inline: true
+  samp:
+    inline: true
+  kbd:
+    inline: true
+  sub:
+    inline: true
+  sup:
+    inline: true
+  i:
+    inline: true
+  b:
+    inline: true
+  u:
+    inline: true
+  mark:
+    inline: true
+  bdi:
+    inline: true
+  bdo:
+    inline: true
+  span:
+    inline: true
+  br:
+    empty: true
+    inline: true
+    omit_end_tag: true
+  wbr:
+    empty: true
+    inline: true
+    omit_end_tag: true
+
+  #
+  # Edits
+  #
+  ins:
+    inline: true
+  del:
+    alias: del_
+    inline: true
+    hidden: true
+
+  #
+  # Embedded content
+  #
+  picture:
+  source:
+    empty: true
+    omit_end_tag: true
+  img:
+    empty: true
+    inline: true
+    omit_end_tag: true
+  iframe:
+    empty: true
+  embed:
+    empty: true
+    omit_end_tag: true
+  object:
+    alias: object_
+  video:
+  audio:
+  track:
+    empty: true
+    omit_end_tag: true
+  map:
+    alias: map_
+  area:
+    empty: true
+    omit_end_tag: true
+
+  #
+  # Tabular data
+  #
+  table:
+  caption:
+  colgroup:
+  col:
+    empty: true
+    omit_end_tag: true
+  tbody:
+  thead:
+  tfoot:
+  tr:
+  td:
+  th:
+
+  #
+  # Forms
+  #
+  form:
+  label:
+  input:
+    alias: input_
+    empty: true
+    omit_end_tag: true
+  button:
+  select:
+  datalist:
+  optgroup:
+  option:
+  textarea:
+  output:
+  progress:
+  meter:
+  fieldset:
+  legend:
+
+  #
+  # Interactive elements
+  #
+  details:
+  summary:
+  dialog:
+
+  #
+  # Scripting
+  #
+  script:
+  noscript:
+  template:
+    alias: template_
+  slot:
+  canvas:

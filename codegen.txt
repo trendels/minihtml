@@ -1,0 +1,1 @@
+src/minihtml/tags.py -c -D TAGS=tags/html5.yml

@@ -1,4 +1,9 @@
-all: format typecheck test
+# Generate, format, typecheck and test code
+all: codegen format typecheck test
+
+# Run code generation
+codegen:
+    uv run cog --check @codegen.txt || uv run cog -r @codegen.txt
 
 # Lint and format all code
 format:

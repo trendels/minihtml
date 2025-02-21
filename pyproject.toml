@@ -15,10 +15,12 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "cogapp>=3.4.1",
     "coverage>=7.6.11",
     "pyright>=1.1.393",
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.3",
+    "pyyaml>=6.0.2",
     "ruff>=0.9.5",
 ]
 
