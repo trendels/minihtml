@@ -97,8 +97,8 @@ You can chain calls and all other operations on the element to modify it
 further. Each operation modifies the element in-place (elements are mutable).
 
 ~~~python
->>> print(a(href="http://github.com")("github"))
-<a href="http://github.com">github</a>
+>>> print(a(href="https://github.com")("github"))
+<a href="https://github.com">github</a>
 
 ~~~
 
