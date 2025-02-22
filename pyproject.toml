@@ -12,9 +12,9 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 [project.urls]
-homepage = "https://github.com/trendels/minihtml"
-source = "https://github.com/trendels/minihtml"
-changelog = "https://github.com/trendels/minihtml/blob/main/Changelog.md"
+Homepage = "https://github.com/trendels/minihtml"
+Source = "https://github.com/trendels/minihtml"
+Changelog = "https://github.com/trendels/minihtml/blob/main/Changelog.md"
 
 [build-system]
 requires = ["hatchling"]
