@@ -1,5 +1,5 @@
 # Generate, format, typecheck and test code
-all: codegen format typecheck test
+all: codegen format typecheck test doctest
 
 # Run code generation
 codegen:
@@ -19,6 +19,10 @@ test:
     uv run coverage run -m pytest
     uv run coverage report
     uv run coverage html
+
+# Run doctests
+doctest:
+    uv run python -m doctest -o ELLIPSIS README.md
 
 # Run tests when code changes (requires "watchexec")
 watch:
