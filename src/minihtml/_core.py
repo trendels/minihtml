@@ -82,6 +82,7 @@ def _format_attrs(attrs: dict[str, str]) -> str:
 
 
 class Element(Node):
+    _tag: str
     _attrs: dict[str, str]
 
     def __getitem__(self, key: str) -> Self:
@@ -95,6 +96,9 @@ class Element(Node):
             old_names = self._attrs.get("class", "").split()
             self._attrs["class"] = " ".join(old_names + class_names)
         return self
+
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__} {self._tag}>"
 
 
 class ElementEmpty(Element):
@@ -261,7 +265,14 @@ def fragment(*content: Node | HasNodes | str) -> Fragment:
     return f
 
 
-class PrototypeEmpty:
+class Prototype:
+    _tag: str
+
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__} {self._tag}>"
+
+
+class PrototypeEmpty(Prototype):
     def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
         self._tag = tag
         self._inline = inline
@@ -278,7 +289,7 @@ class PrototypeEmpty:
         )[key]
 
 
-class PrototypeNonEmpty:
+class PrototypeNonEmpty(Prototype):
     def __init__(self, tag: str, *, inline: bool):
         self._tag = tag
         self._inline = inline

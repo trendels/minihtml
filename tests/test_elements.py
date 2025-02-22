@@ -11,6 +11,16 @@ img = make_prototype("img", inline=True, empty=True, omit_end_tag=True)
 iframe = make_prototype("iframe", empty=True, omit_end_tag=False)
 
 
+def test_prototype_repr():
+    assert repr(div) == "<PrototypeNonEmpty div>"
+    assert repr(img) == "<PrototypeEmpty img>"
+
+
+def test_element_repr():
+    assert repr(div()) == "<ElementNonEmpty div>"
+    assert repr(img()) == "<ElementEmpty img>"
+
+
 def test_render_bare_elements():
     assert str(div()) == "<div></div>"
     assert str(img()) == "<img>"
