@@ -7,7 +7,7 @@ minihtml is to enable you to write HTML mixed with presentation logic without
 obscuring the structure of the resulting HTML document, not unlike the
 experience with a text-based templating system such as [Jinja][jinja].
 
-jinja: https://jinja.palletsprojects.com/
+[jinja]: https://jinja.palletsprojects.com/
 
 ## Installation
 
