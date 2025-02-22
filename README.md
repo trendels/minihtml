@@ -160,8 +160,8 @@ from this, so you can mix the two styles:
 
 ~~~
 
-When nesting elements directly within another, it is useful to put the context
-managers on the same line, to reduce the number of lines and levels of
+When nesting elements directly within one another, it is useful to put the
+context managers on the same line, to reduce the number of lines and levels of
 indentation:
 
 ~~~python
