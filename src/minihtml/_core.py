@@ -1,11 +1,17 @@
 import io
 import re
+import sys
 from collections.abc import Iterable, Iterator
 from contextvars import ContextVar
 from dataclasses import dataclass
 from html import escape
 from itertools import zip_longest
-from typing import Literal, Protocol, Self, TextIO, overload
+from typing import Literal, Protocol, TextIO, overload
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 # We also disallow '&', '<', ';'
 ATTRIBUTE_NAME_RE = re.compile(r"^[a-zA-Z0-9!#$%()*+,.:?@\[\]^_`{|}~-]+$")

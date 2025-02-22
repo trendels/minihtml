@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Stanis Trendelenburg", email = "stanis.trendelenburg@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = []
 license = "MIT"
 license-files = ["LICENSE"]
@@ -24,6 +24,8 @@ dev = [
     "pytest-asyncio>=0.25.3",
     "pyyaml>=6.0.2",
     "ruff>=0.9.5",
+    "taskgroup>=0.2.2 ; python_full_version < '3.11'",
+    "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
 ]
 
 [tool.ruff]

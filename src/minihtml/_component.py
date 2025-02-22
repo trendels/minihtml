@@ -1,7 +1,13 @@
 import io
+import sys
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
-from typing import Callable, Concatenate, Generic, ParamSpec, Self, TypeAlias
+from typing import Callable, Concatenate, Generic, ParamSpec, TypeAlias
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 from ._core import (
     ElementNonEmpty,

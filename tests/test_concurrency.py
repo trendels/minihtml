@@ -1,5 +1,11 @@
 import asyncio
+import sys
 from textwrap import dedent
+
+if sys.version_info >= (3, 11):
+    from asyncio import TaskGroup
+else:
+    from taskgroup import TaskGroup
 
 from minihtml import Element, make_prototype
 
@@ -14,7 +20,7 @@ async def test_concurrent_templates():
             div(f"{name}-2")
         return result
 
-    async with asyncio.TaskGroup() as tg:
+    async with TaskGroup() as tg:
         t1 = tg.create_task(template("a"))
         t2 = tg.create_task(template("b"))
 
