@@ -88,7 +88,8 @@ Content can be text, other elements or a mix of the two:
 
 ~~~python
 >>> from minihtml.tags import em
->>> print(div("this is ", em("emphasized text"), "."))
+>>> elem = div("this is ", em("emphasized text"), ".")
+>>> print(elem)
 <div>this is <em>emphasized text</em>.</div>
 
 ~~~
@@ -97,7 +98,8 @@ You can chain calls and all other operations on the element to modify it
 further. Each operation modifies the element in-place (elements are mutable).
 
 ~~~python
->>> print(a(href="https://github.com")("github"))
+>>> elem = a(href="https://github.com")("github")
+>>> print(elem)
 <a href="https://github.com">github</a>
 
 ~~~
