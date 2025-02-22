@@ -28,10 +28,9 @@ A basic "hello, world" example:
 >>> with html(lang="en") as elem:
 ...     with head:
 ...         title("hello, world!")
-...     with body:
-...         with div["#content main"]:
-...             p("Welcome to ", a(href="https://example.com/")("my website"))
-...             img(src="hello.png", alt="hello")
+...     with body, div["#content main"]:
+...         p("Welcome to ", a(href="https://example.com/")("my website"))
+...         img(src="hello.png", alt="hello")
 ...
 <ElementNonEmpty title>
 <ElementNonEmpty p>
@@ -160,6 +159,36 @@ from this, so you can mix the two styles:
 </div>
 
 ~~~
+
+When nesting elements directly within another, it is useful to put the context
+managers on the same line, to reduce the number of lines and levels of
+indentation:
+
+~~~python
+>>> with div["container"] as elem:
+...     with div:
+...         with div:
+...             p("content")
+...
+<ElementNonEmpty p>
+
+# This is equivalent but shorter:
+>>> with div["container"] as elem, div, div:
+...     p("content")
+...
+<ElementNonEmpty p>
+
+>>> print(elem)
+<div class="container">
+  <div>
+    <div>
+      <p>content</p>
+    </div>
+  </div>
+</div>
+
+~~~
+
 
 <!-- TODO document attribute name mangling -->
 <!-- TODO document components -->
