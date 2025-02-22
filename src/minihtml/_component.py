@@ -12,6 +12,7 @@ from ._core import (
     push_element_context,
     register_with_context,
 )
+from ._template_context import register_template_scripts, register_template_styles
 
 
 class SlotContext:
@@ -101,11 +102,18 @@ class Component:
 
 class ComponentWrapper(Generic[P]):
     def __init__(
-        self, impl: ComponentImpl[P], slots: Sequence[str], default: str | None
+        self,
+        impl: ComponentImpl[P],
+        slots: Sequence[str],
+        default: str | None,
+        styles: Sequence[Node] | None = None,
+        scripts: Sequence[Node] | None = None,
     ):
         self._impl = impl
         self._slots = slots
         self._default = default
+        self._styles = styles
+        self._scripts = scripts
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> Component:
         callback: Callable[[Slots], Node | HasNodes] = lambda slots: self._impl(
@@ -113,12 +121,18 @@ class ComponentWrapper(Generic[P]):
         )
         component = Component(callback, slots=Slots(self._slots, default=self._default))
         register_with_context(component)
+        if self._styles:
+            register_template_styles(self._styles)
+        if self._scripts:
+            register_template_scripts(self._scripts)
         return component
 
 
 def component(
     slots: Sequence[str] | None = None,
     default: str | None = None,
+    style: Node | Sequence[Node] | None = None,
+    script: Node | Sequence[Node] | None = None,
 ) -> Callable[[ComponentImpl[P]], ComponentWrapper[P]]:
     slots = slots or []
     if default and not slots:
@@ -128,7 +142,12 @@ def component(
             f"Invalid default: {default!r}. Available slots: {', '.join(repr(s) for s in slots)}"
         )
 
+    styles = [style] if isinstance(style, Node) else style
+    scripts = [script] if isinstance(script, Node) else script
+
     def decorator(fn: ComponentImpl[P]) -> ComponentWrapper[P]:
-        return ComponentWrapper(fn, slots=slots, default=default)
+        return ComponentWrapper(
+            fn, slots=slots, default=default, styles=styles, scripts=scripts
+        )
 
     return decorator

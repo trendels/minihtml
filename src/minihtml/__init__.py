@@ -13,7 +13,7 @@ from ._core import (
     safe,
     text,
 )
-from ._template import template
+from ._template import component_scripts, component_styles, template
 
 __all__ = [
     "CircularReferenceError",
@@ -34,4 +34,6 @@ __all__ = [
     "Component",
     "ComponentWrapper",
     "SlotContext",
+    "component_styles",
+    "component_scripts",
 ]

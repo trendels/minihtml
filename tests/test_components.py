@@ -12,6 +12,8 @@ from minihtml.tags import (
     img,
     main,
     p,
+    script,
+    style,
     title,
 )
 
@@ -211,3 +213,14 @@ def test_nested_components():
             </div>
           </div>
         </div>""")
+
+
+def test_component_style_and_script_has_no_effect_outside_of_template_context():
+    @component(
+        style=style(".my-component { background: #ccc }"),
+        script=script("// script goes here"),
+    )
+    def my_component(slots: Slots) -> Element:
+        return div["my-component"]
+
+    assert str(my_component()) == '<div class="my-component"></div>'
