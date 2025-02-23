@@ -46,7 +46,7 @@ def test_template_with_layout_component():
 
         return elem
 
-    @template(layout=my_layout())
+    @template(layout=my_layout)
     def my_template(layout: Component, message: str) -> None:
         with layout.slot("title"):
             text("my title")
@@ -61,6 +61,21 @@ def test_template_with_layout_component():
           <body>
             <div id="content">
               <div>hello</div>
+            </div>
+          </body>
+        </html>
+    """)
+
+    # Test that layout is not cached
+    assert my_template("goodbye") == dedent("""\
+        <!doctype html>
+        <html>
+          <head>
+            <title>my title</title>
+          </head>
+          <body>
+            <div id="content">
+              <div>goodbye</div>
             </div>
           </body>
         </html>

@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from functools import wraps
 from typing import Callable, Concatenate, ParamSpec, TextIO, TypeAlias, overload
 
-from ._component import Component
+from ._component import Component, ComponentWrapper
 from ._core import HasNodes, Node, iter_nodes, register_with_context
 from ._template_context import get_template_context, template_context
 
@@ -30,12 +30,12 @@ def template(
 
 @overload
 def template(
-    layout: Component, *, doctype: bool = ...
+    layout: ComponentWrapper[...], *, doctype: bool = ...
 ) -> Callable[[TemplateImplLayout[P]], Callable[P, str]]: ...
 
 
 def template(
-    layout: Component | None = None,
+    layout: ComponentWrapper[...] | None = None,
     *,
     doctype: bool = True,
 ) -> (
@@ -61,8 +61,8 @@ def template(
             @wraps(fn)
             def wrapper(*args: P.args, **kwargs: P.kwargs) -> str:
                 with template_context():
-                    with layout as result:
-                        fn(layout, *args, **kwargs)
+                    with layout() as result:
+                        fn(result, *args, **kwargs)
                     return _render(result, doctype=doctype)
 
             return wrapper
