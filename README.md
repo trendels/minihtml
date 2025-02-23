@@ -1,6 +1,6 @@
 # minihtml - Simple HTML Generation
 
-![PyPI - Version](https://img.shields.io/pypi/v/minihtml)
+[![PyPI - Version](https://img.shields.io/pypi/v/minihtml)](https://pypi.org/project/minihtml/)
 
 The minihtml library provides tools to generate HTML from Python. The goal of
 minihtml is to enable you to write HTML mixed with presentation logic without
