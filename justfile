@@ -20,7 +20,7 @@ format:
 # Check that code is linted and formatted
 check-format:
     uv run ruff check
-    uv run ruff format --check
+    uv run ruff format --check --diff
 
 # Run typechecker
 typecheck:
