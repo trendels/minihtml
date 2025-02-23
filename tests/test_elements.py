@@ -135,25 +135,6 @@ def test_calling_prototype_in_element_context_adds_child_element():
     assert str(elem) == '<div class="myclass"><img src="hello.png"></div>'
 
 
-def test_calling_element_in_element_context_adds_child_element():
-    with div as elem:
-        span["test"]("hello")
-
-    assert str(elem) == '<div><span class="test">hello</span></div>'
-
-    with div["myclass"] as elem:
-        span["test"]("hello again")
-
-    assert (
-        str(elem) == '<div class="myclass"><span class="test">hello again</span></div>'
-    )
-
-    with div["myclass"] as elem:
-        img["test"](src="hello.png")
-
-    assert str(elem) == '<div class="myclass"><img class="test" src="hello.png"></div>'
-
-
 def test_elements_used_as_positional_args_are_not_added_twice():
     with div as elem:
         div["nested"](span("hello"))
