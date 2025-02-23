@@ -152,10 +152,10 @@ class ElementNonEmpty(Element):
             elif value is not False:
                 self._attrs[name] = value
 
-        child_nodes = list(iter_nodes(children))
-        for child in child_nodes:
-            deregister_from_context(child)
-        self._children.extend(child_nodes)
+        for child in children:
+            if not isinstance(child, str):
+                deregister_from_context(child)
+        self._children.extend(iter_nodes(children))
 
         register_with_context(self)
         return self

@@ -104,3 +104,43 @@ def test_template_collects_and_deduplicates_component_styles_and_scripts():
           </body>
         </html>
     """)
+
+
+def test_passing_component_styles_and_scripts_as_arguments():
+    @component(
+        style=style(".my-component { background: #ccc }"),
+        script=[
+            script("// 1st script goes here"),
+            script("// 2nd script goes here"),
+        ],
+    )
+    def my_component(slots: Slots) -> Element:
+        return div["my-component"]
+
+    @template()
+    def my_template() -> Element:
+        return html(
+            head(
+                component_styles(),
+            ),
+            body(
+                my_component(),
+                my_component(),
+                component_scripts(),
+            ),
+        )
+
+    assert my_template() == dedent("""\
+        <!doctype html>
+        <html>
+          <head>
+            <style>.my-component { background: #ccc }</style>
+          </head>
+          <body>
+            <div class="my-component"></div>
+            <div class="my-component"></div>
+            <script>// 1st script goes here</script>
+            <script>// 2nd script goes here</script>
+          </body>
+        </html>
+    """)

@@ -224,3 +224,19 @@ def test_component_style_and_script_has_no_effect_outside_of_template_context():
         return div["my-component"]
 
     assert str(my_component()) == '<div class="my-component"></div>'
+
+
+def test_passing_component_as_argument():
+    @component()
+    def my_component(slots: Slots) -> Element:
+        return div["my-component"]
+
+    with div["#container"] as elem:
+        div(my_component())
+
+    assert str(elem) == dedent("""\
+        <div id="container">
+          <div>
+            <div class="my-component"></div>
+          </div>
+        </div>""")
