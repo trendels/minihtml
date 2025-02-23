@@ -124,7 +124,6 @@ class ElementEmpty(Element):
             elif value is not False:
                 self._attrs[name] = value
 
-        register_with_context(self)
         return self
 
     def write(self, f: TextIO, indent: int = 0) -> None:
@@ -157,7 +156,6 @@ class ElementNonEmpty(Element):
                 deregister_from_context(child)
         self._children.extend(iter_nodes(children))
 
-        register_with_context(self)
         return self
 
     def __enter__(self) -> Self:
@@ -285,14 +283,18 @@ class PrototypeEmpty(Prototype):
         self._omit_end_tag = omit_end_tag
 
     def __call__(self, **attrs: str | bool) -> ElementEmpty:
-        return ElementEmpty(
+        elem = ElementEmpty(
             self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
         )(**attrs)
+        register_with_context(elem)
+        return elem
 
     def __getitem__(self, key: str) -> ElementEmpty:
-        return ElementEmpty(
+        elem = ElementEmpty(
             self._tag, inline=self._inline, omit_end_tag=self._omit_end_tag
         )[key]
+        register_with_context(elem)
+        return elem
 
 
 class PrototypeNonEmpty(Prototype):
@@ -308,10 +310,13 @@ class PrototypeNonEmpty(Prototype):
         return elem
 
     def __getitem__(self, key: str) -> ElementNonEmpty:
-        return ElementNonEmpty(self._tag, inline=self._inline)[key]
+        elem = ElementNonEmpty(self._tag, inline=self._inline)[key]
+        register_with_context(elem)
+        return elem
 
     def __enter__(self) -> ElementNonEmpty:
         elem = ElementNonEmpty(self._tag, inline=self._inline)
+        register_with_context(elem)
         push_element_context(elem)
         return elem
 

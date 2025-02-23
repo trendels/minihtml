@@ -182,7 +182,7 @@ def test_circular_reference_raises_error_when_rendering():
         str(elem)
 
     with div() as elem2:
-        elem2()
+        div(elem2)
 
     with assert_raises(CircularReferenceError):
         str(elem2)
