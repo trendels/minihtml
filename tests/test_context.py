@@ -16,7 +16,8 @@ class OtherContext(Context):
 
 
 def test_set_and_get_context():
-    with MyContext(name="fred") as g:
+    g = MyContext(name="fred")
+    with g:
         assert MyContext.get() is g
 
 

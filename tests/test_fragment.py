@@ -42,6 +42,17 @@ def test_can_use_fragment_in_context_manager():
     assert str(elem) == "<div>hi there</div>"
 
 
+def test_element_passed_to_fragment_is_not_registered_with_context():
+    with div as elem:
+        fragment(p("hi"), p("there"))
+
+    assert str(elem) == dedent("""\
+        <div>
+          <p>hi</p>
+          <p>there</p>
+        </div>""")
+
+
 def test_stringifying_fragment_has_no_side_effect():
     f = fragment()
     with f:

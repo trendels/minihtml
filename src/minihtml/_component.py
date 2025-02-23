@@ -36,22 +36,41 @@ class SlotContext:
 
 
 class Slots:
+    """
+    Object to interact with slots from the inside of a component.
+    """
+
     def __init__(self, slots: Sequence[str], default: str | None):
         self._slots: dict[str, list[Node | HasNodes]] = {slot: [] for slot in slots}
         self._default = default or ""
         if not slots:
-            self._slots[""] = []
+            self._slots[self._default] = []
 
     def add_content(self, slot: str | None, content: list[Node | HasNodes]) -> None:
         slot = slot or self._default
         self._slots[slot].extend(content)
 
     def slot(self, slot: str | None = None) -> SlotContext:
+        """
+        Insert the contents of a given slot.
+
+        Args:
+            slot: The slot name, or `None` to refer to the default slot.
+
+        When used as a context manager, nodes created within the context will
+        be inserted if the slot has not been filled (default content).
+        """
         for obj in self._slots[slot or self._default]:
             register_with_context(obj)
         return SlotContext(capture=self.is_filled(slot))
 
     def is_filled(self, slot: str | None = None) -> bool:
+        """
+        Returns whether or not the slot has been filled.
+
+        Args:
+            slot: The slot name, or `None` to refer to the default slot.
+        """
         return bool(self._slots[slot or self._default])
 
 
@@ -61,6 +80,14 @@ ComponentImpl: TypeAlias = Callable[Concatenate[Slots, P], Node | HasNodes]
 
 
 class Component:
+    """
+    An instance of a component.
+
+    To fill the default slot, use the component as a context manager.
+
+    To fill a slot by name, use the :meth:`slot` method.
+    """
+
     def __init__(self, callback: Callable[[Slots], Node | HasNodes], slots: Slots):
         self._callback = callback
         self._slots = slots
@@ -79,6 +106,13 @@ class Component:
 
     @contextmanager
     def slot(self, slot: str | None = None) -> Iterator[None]:
+        """
+        Args:
+            slot: The slot name, or `None` to refer to the default slot.
+
+        Context manager to add content to a slot. Nodes created within the
+        context will be added to the slot.
+        """
         capture = ElementNonEmpty("__capture__")
         push_element_context(capture)
         try:
@@ -107,6 +141,13 @@ class Component:
 
 
 class ComponentWrapper(Generic[P]):
+    """
+    Wraps a component implementation.
+
+    Decorating a function with the :deco:`component` decorator replaces the
+    function with a `ComponentWrapper`.
+    """
+
     def __init__(
         self,
         impl: ComponentImpl[P],
@@ -140,6 +181,21 @@ def component(
     style: Node | Sequence[Node] | None = None,
     script: Node | Sequence[Node] | None = None,
 ) -> Callable[[ComponentImpl[P]], ComponentWrapper[P]]:
+    """
+    Decorator to create a component.
+
+    Args:
+        slots: A list of slot names. When omitted, the component will have one
+          default unnamed slot.
+        default: One of the names in `slots` that should be the default slot.
+          When `slots` is set but not `default`, the component's slots always
+          have to be referred to by name.
+        style: Associate one or more style nodes with the component.
+        script: Associate one or more script nodes with the component.
+
+    When called, the decorated function receives a :class:`Slots` object as its
+    first argument.
+    """
     slots = slots or []
     if default and not slots:
         raise ValueError(f"Can't set default without slots: {default!r}")

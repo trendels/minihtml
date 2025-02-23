@@ -21,6 +21,20 @@ from minihtml.tags import (
 def test_basic_component():
     @component()
     def my_component(slots: Slots, name: str) -> Element:
+        return div(name=name)
+
+    with div["container"] as elem:
+        my_component(name="component-name")
+
+    assert str(elem) == dedent("""\
+        <div class="container">
+          <div name="component-name"></div>
+        </div>""")
+
+
+def test_component_slot():
+    @component()
+    def my_component(slots: Slots, name: str) -> Element:
         with div(name=name) as elem:
             slots.slot()
         return elem
@@ -65,6 +79,18 @@ def test_named_slots():
             </main>
           </body>
         </html>""")
+
+
+def test_component_without_default_raises_if_default_slot_is_used():
+    @component(slots=["one"])
+    def my_component(slots: Slots) -> Element:
+        with div as elem:
+            slots.slot("one")
+        return elem
+
+    with assert_raises(KeyError):
+        with my_component():
+            p("default slot content")
 
 
 def test_named_slots_with_default():

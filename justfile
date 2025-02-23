@@ -1,7 +1,7 @@
 # Generate, format, typecheck and test code
 all: codegen format typecheck test doctest
 
-# Runn all checks (for CI)
+# Run all checks (for CI)
 check: check-codegen check-format typecheck
 
 # Run code generation
@@ -31,6 +31,14 @@ test:
     uv run coverage run -m pytest
     uv run coverage report
     uv run coverage html
+
+# Test examples in Sphinx documentation
+test-docs:
+    cd docs && make doctest
+
+# Build Sphinx documentation
+docs: test-docs
+    cd docs && make clean html
 
 # Run doctests
 doctest:

@@ -14,10 +14,21 @@ TemplateImplLayout: TypeAlias = Callable[Concatenate[Component, P], None]
 
 
 class Template:
+    """
+    The result of calling a function decorated with :deco:`template`.
+    """
+
     def __init__(self, callback: Callable[[], list[Node]]):
         self._callback = callback
 
     def render(self, *, doctype: bool = True) -> str:
+        """
+        Render the template and return a string.
+
+        Args:
+            doctype: Whether or not to prepend the doctype declaration
+              ``<!doctype html>`` to the output.
+        """
         nodes = self._callback()
         buf = io.StringIO()
         if doctype:
@@ -33,16 +44,37 @@ def template() -> Callable[[TemplateImpl[P]], Callable[P, Template]]: ...
 
 @overload
 def template(
-    *, layout: ComponentWrapper[...]
+    layout: ComponentWrapper[...],
 ) -> Callable[[TemplateImplLayout[P]], Callable[P, Template]]: ...
 
 
 def template(
-    *, layout: ComponentWrapper[...] | None = None
+    layout: ComponentWrapper[...] | None = None,
 ) -> (
     Callable[[TemplateImpl[P]], Callable[P, Template]]
     | Callable[[TemplateImplLayout[P]], Callable[P, Template]]
 ):
+    """
+    Decorator to create a template.
+
+    Args:
+        layout: A component to use as the layout for the template. The layout
+          must have a default slot.
+
+    When ``layout`` is used, the decorated function will be executed within the
+    context of the layout component when the template is rendered. All elements
+    created in the function body will be added to the default slot of the
+    component. The function will receive the component as the first positional
+    argument, and should return `None`.
+
+    When ``layout`` is not used, the function should return the content to be
+    rendered.
+
+    The template will collect and deduplicate the style and script nodes of all
+    components used within the template (including the layout component). These
+    nodes can be inserted into the document by using the
+    :func:`component_styles()` and :func:`component_scripts()` placeholders.
+    """
     if layout is None:
 
         def plain_decorator(fn: TemplateImpl[P]) -> Callable[P, Template]:
@@ -96,8 +128,9 @@ def component_styles() -> ResourceWrapper:
     """
     Placeholder element for component styles.
 
-    Can only be used in code called from a :deco:`template`. Inserts the style
-    nodes collected from all components used in the current template.
+    Can only be used in code called from a function decorated with
+    :deco:`template`. Inserts the style nodes collected from all components
+    used in the current template.
     """
     wrapper = ResourceWrapper(get_template_context().styles)
     register_with_context(wrapper)
@@ -108,8 +141,9 @@ def component_scripts() -> ResourceWrapper:
     """
     Placeholder element for component scripts.
 
-    Can only be used in code called from a :deco:`template`. Inserts the script
-    nodes collected from all components used in the current template.
+    Can only be used in code called from a function decorated with
+    :deco:`template`. Inserts the script nodes collected from all components
+    used in the current template.
     """
     wrapper = ResourceWrapper(get_template_context().scripts)
     register_with_context(wrapper)

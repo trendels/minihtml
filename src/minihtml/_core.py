@@ -18,10 +18,18 @@ ATTRIBUTE_NAME_RE = re.compile(r"^[a-zA-Z0-9!#$%()*+,.:?@\[\]^_`{|}~-]+$")
 
 
 class CircularReferenceError(Exception):
+    """
+    Raised when a circular reference between elements is detected.
+    """
+
     pass
 
 
 class Node:
+    """
+    Base class for text nodes and elements.
+    """
+
     _inline: bool
 
     def write(self, f: TextIO, indent: int = 0) -> None:
@@ -59,6 +67,12 @@ def iter_nodes(objects: Iterable[Node | HasNodes | str]) -> Iterator[Node]:
 
 
 class Text(Node):
+    """
+    A text node.
+
+    Use the :func:`text` and :func:`safe` functions to create text nodes.
+    """
+
     def __init__(self, s: str, escape: bool = True):
         self._text = s
         self._inline = True
@@ -72,12 +86,24 @@ class Text(Node):
 
 
 def text(s: str) -> Text:
+    """
+    Create a text node.
+
+    When called inside an element context, adds text content to the parent
+    element.
+    """
     node = Text(s)
     register_with_context(node)
     return node
 
 
 def safe(s: str) -> Text:
+    """
+    Create a text node with HTML escaping disabled.
+
+    When called inside an element context, adds text content to the parent
+    element.
+    """
     node = Text(s, escape=False)
     register_with_context(node)
     return node
@@ -88,6 +114,10 @@ def _format_attrs(attrs: dict[str, str]) -> str:
 
 
 class Element(Node):
+    """
+    Base class for elements.
+    """
+
     _tag: str
     _attrs: dict[str, str]
 
@@ -108,6 +138,10 @@ class Element(Node):
 
 
 class ElementEmpty(Element):
+    """
+    An empty element.
+    """
+
     def __init__(self, tag: str, *, inline: bool = False, omit_end_tag: bool):
         self._tag = tag
         self._inline = inline
@@ -135,6 +169,10 @@ class ElementEmpty(Element):
 
 
 class ElementNonEmpty(Element):
+    """
+    An element that can have content.
+    """
+
     def __init__(self, tag: str, *, inline: bool = False):
         self._tag = tag
         self._attrs: dict[str, str] = {}
@@ -174,9 +212,7 @@ class ElementNonEmpty(Element):
                 raise CircularReferenceError
             ids_seen.add(id(self))
         else:
-            ids_seen = {
-                id(self),
-            }
+            ids_seen = {id(self)}
             _rendering_context.set(ids_seen)
 
         try:
@@ -241,8 +277,17 @@ def deregister_from_context(node: Node | HasNodes) -> None:
 
 
 class Fragment:
+    """
+    A collection of nodes without a parent element.
+
+    Use the :func:`fragment` function to create fragments.
+    """
+
     def __init__(self, *content: Node | HasNodes | str):
         self._content = list(content)
+        for obj in content:
+            if not isinstance(obj, str):
+                deregister_from_context(obj)
 
     def get_nodes(self) -> Iterable[Node]:
         return iter_nodes(self._content)
@@ -264,19 +309,39 @@ class Fragment:
 
 
 def fragment(*content: Node | HasNodes | str) -> Fragment:
+    """
+    Create a fragment.
+
+    A fragment is a collection of nodes without a parent element.
+
+    When called inside an element context, adds the fragment contents to the
+    parent element.
+    """
     f = Fragment(*content)
     register_with_context(f)
     return f
 
 
 class Prototype:
+    """
+    Base class for element prototypes.
+    """
+
     _tag: str
 
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__} {self._tag}>"
+    def _get_repr(self, **flags: bool) -> str:
+        flag_names = [k for k, v in flags.items() if v]
+        flag_str = f" ({', '.join(flag_names)})" if flag_names else ""
+        return f"<{type(self).__name__} {self._tag}{flag_str}>"
 
 
 class PrototypeEmpty(Prototype):
+    """
+    A prototype for emtpy elements.
+
+    Use the :func:`make_prototype` function to create new prototypes.
+    """
+
     def __init__(self, tag: str, *, inline: bool, omit_end_tag: bool):
         self._tag = tag
         self._inline = inline
@@ -296,8 +361,17 @@ class PrototypeEmpty(Prototype):
         register_with_context(elem)
         return elem
 
+    def __repr__(self) -> str:
+        return self._get_repr(inline=self._inline, omit_end_tag=self._omit_end_tag)
+
 
 class PrototypeNonEmpty(Prototype):
+    """
+    A prototype for elements that can have content.
+
+    Use the :func:`make_prototype` function to create new prototypes.
+    """
+
     def __init__(self, tag: str, *, inline: bool):
         self._tag = tag
         self._inline = inline
@@ -324,6 +398,9 @@ class PrototypeNonEmpty(Prototype):
         parent, children = pop_element_context()
         parent(*children)
 
+    def __repr__(self) -> str:
+        return self._get_repr(inline=self._inline)
+
 
 @overload
 def make_prototype(tag: str, *, inline: bool = ...) -> PrototypeNonEmpty: ...
@@ -344,6 +421,20 @@ def make_prototype(
 def make_prototype(
     tag: str, *, inline: bool = False, empty: bool = False, omit_end_tag: bool = False
 ) -> PrototypeNonEmpty | PrototypeEmpty:
+    """
+    Factory function to create a new element prototype.
+
+    Args:
+        tag: The tag name.
+        inline: Whether or not the element is an inline (``True``) or block
+          element (``False``).
+        empty: Whether or not the element is allowed to have content.
+        omit_end_tag: When `empty=True`, whether or not the end tag should be
+          omitted when rendering.
+
+    Returns:
+        An element prototype.
+    """
     if empty:
         return PrototypeEmpty(tag, inline=inline, omit_end_tag=omit_end_tag)
     return PrototypeNonEmpty(tag, inline=inline)

@@ -32,12 +32,17 @@ dev = [
     "taskgroup>=0.2.2 ; python_full_version < '3.11'",
     "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
 ]
+docs = [
+    "furo>=2024.8.6",
+    "sphinx>=8.2.0 ; python_full_version >= '3.11'",
+]
 
 [tool.ruff]
 include = [
     "pyproject.toml",
     "src/**/*.py",
     "tests/**/*.py",
+    "examples/**.py",
 ]
 
 [tool.ruff.lint]
@@ -51,7 +56,7 @@ ignore = [
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-include = ["src", "tests"]
+include = ["src", "tests", "examples"]
 strict = ["src", "tests"]
 reportUnnecessaryTypeIgnoreComment = true
 

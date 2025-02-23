@@ -13,7 +13,9 @@ iframe = make_prototype("iframe", empty=True, omit_end_tag=False)
 
 def test_prototype_repr():
     assert repr(div) == "<PrototypeNonEmpty div>"
-    assert repr(img) == "<PrototypeEmpty img>"
+    assert repr(span) == "<PrototypeNonEmpty span (inline)>"
+    assert repr(img) == "<PrototypeEmpty img (inline, omit_end_tag)>"
+    assert repr(iframe) == "<PrototypeEmpty iframe>"
 
 
 def test_element_repr():
