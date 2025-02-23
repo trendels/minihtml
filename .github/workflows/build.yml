@@ -24,7 +24,9 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install just
-        run: sudo apt install -y just
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y just
 
       - name: Install the project
         run: uv sync --dev
