@@ -62,9 +62,11 @@ Calling the prototype produces an element:
 ~~~python
 >>> print(div)
 <PrototypeNonEmpty div>
+
 >>> elem = div()
 >>> repr(elem)
 '<ElementNonEmpty div>'
+
 >>> print(elem)
 <div></div>
 
@@ -76,6 +78,7 @@ arguments to attributes:
 ~~~python
 >>> print(div("text"))
 <div>text</div>
+
 >>> print(div(style="background: green"))
 <div style="background: green"></div>
 
@@ -108,10 +111,13 @@ Indexing is a shortcut to set the `class` and `id` attributes:
 ~~~python
 >>> print(div["hello"])
 <div class="hello"></div>
+
 >>> print(div["#main"])
 <div id="main"></div>
+
 >>> print(div["#main foo bar"])
 <div id="main" class="foo bar"></div>
+
 >>> print(div["foo"]["bar"])
 <div class="foo bar"></div>
 
