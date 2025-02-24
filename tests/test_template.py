@@ -10,7 +10,7 @@ from minihtml import (
     template,
     text,
 )
-from minihtml.tags import body, div, head, html, script, style, title
+from minihtml.tags import body, div, head, html, main, script, style, title
 
 
 def test_template_returns_html_with_doctype_and_trailing_newline():
@@ -93,27 +93,39 @@ def test_template_collects_and_deduplicates_component_styles_and_scripts():
     def my_component(slots: Slots) -> Element:
         return div["my-component"]
 
-    @template()
-    def my_template() -> Element:
+    @component(
+        style=style("main { background: #eee }"),
+        script=script("// layout script goes here"),
+    )
+    def my_layout(slots: Slots) -> Element:
         with html as elem:
             with head:
                 component_styles()
             with body:
-                my_component()
-                my_component()
+                with main:
+                    slots.slot()
                 component_scripts()
 
         return elem
+
+    @template(layout=my_layout)
+    def my_template(layout: Component) -> None:
+        my_component()
+        my_component()
 
     assert my_template() == dedent("""\
         <!doctype html>
         <html>
           <head>
+            <style>main { background: #eee }</style>
             <style>.my-component { background: #ccc }</style>
           </head>
           <body>
-            <div class="my-component"></div>
-            <div class="my-component"></div>
+            <main>
+              <div class="my-component"></div>
+              <div class="my-component"></div>
+            </main>
+            <script>// layout script goes here</script>
             <script>// 1st script goes here</script>
             <script>// 2nd script goes here</script>
           </body>
