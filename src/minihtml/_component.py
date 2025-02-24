@@ -75,10 +75,10 @@ class Component:
         parent, children = pop_element_context()
         assert parent is self._capture
         if children:
-            self._slots.add_content("", children)
+            self._slots.add_content(None, children)
 
     @contextmanager
-    def slot(self, slot: str = "") -> Iterator[None]:
+    def slot(self, slot: str | None = None) -> Iterator[None]:
         capture = ElementNonEmpty("__capture__")
         push_element_context(capture)
         try:
