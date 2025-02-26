@@ -211,7 +211,7 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "pygments" },
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx", version = "8.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx", version = "8.2.1", source = { git = "https://github.com/trendels/sphinx?branch=trendels%2Foverload-patch#8f43ac202047f5572c63da9ac92ce2945a36d722" }, marker = "python_full_version >= '3.11'" },
     { name = "sphinx-basic-ng" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a0/e2/d351d69a9a9e4badb4a5be062c2d0e87bd9e6c23b5e57337fef14bef34c8/furo-2024.8.6.tar.gz", hash = "sha256:b63e4cee8abfc3136d3bc03a3d45a76a850bada4d6374d24c1716b0e01394a01", size = 1661506 }
@@ -335,7 +335,7 @@ dev = [
 ]
 docs = [
     { name = "furo" },
-    { name = "sphinx", version = "8.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx", version = "8.2.1", source = { git = "https://github.com/trendels/sphinx?branch=trendels%2Foverload-patch#8f43ac202047f5572c63da9ac92ce2945a36d722" }, marker = "python_full_version >= '3.11'" },
 ]
 
 [package.metadata]
@@ -354,7 +354,7 @@ dev = [
 ]
 docs = [
     { name = "furo", specifier = ">=2024.8.6" },
-    { name = "sphinx", marker = "python_full_version >= '3.11'", specifier = ">=8.2.0" },
+    { name = "sphinx", marker = "python_full_version >= '3.11'", git = "https://github.com/trendels/sphinx?branch=trendels%2Foverload-patch" },
 ]
 
 [[package]]
@@ -580,7 +580,7 @@ wheels = [
 [[package]]
 name = "sphinx"
 version = "8.2.1"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/trendels/sphinx?branch=trendels%2Foverload-patch#8f43ac202047f5572c63da9ac92ce2945a36d722" }
 resolution-markers = [
     "python_full_version >= '3.11'",
 ]
@@ -603,10 +603,6 @@ dependencies = [
     { name = "sphinxcontrib-qthelp", marker = "python_full_version >= '3.11'" },
     { name = "sphinxcontrib-serializinghtml", marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/4b/95bdb36eaee30698f2d244d52e1b9e58642af56525d4b02fcd0f7312c27c/sphinx-8.2.1.tar.gz", hash = "sha256:e4b932951b9c18b039f73b72e4e63afe967d90408700ec222b981ac24647c01e", size = 8321376 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/aa/282768cff0039b227a923cb65686539bb606e448c594d4fdee4d2c7765a1/sphinx-8.2.1-py3-none-any.whl", hash = "sha256:b5d2bb3cdf6207fcacde9f92085d2b97667b05b9c346eaec426ca4be8af505e9", size = 3589415 },
-]
 
 [[package]]
 name = "sphinx-basic-ng"
@@ -614,7 +610,7 @@ version = "1.0.0b2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx", version = "8.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sphinx", version = "8.2.1", source = { git = "https://github.com/trendels/sphinx?branch=trendels%2Foverload-patch#8f43ac202047f5572c63da9ac92ce2945a36d722" }, marker = "python_full_version >= '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/98/0b/a866924ded68efec7a1759587a4e478aec7559d8165fac8b2ad1c0e774d6/sphinx_basic_ng-1.0.0b2.tar.gz", hash = "sha256:9ec55a47c90c8c002b5960c57492ec3021f5193cb26cebc2dc4ea226848651c9", size = 20736 }
 wheels = [

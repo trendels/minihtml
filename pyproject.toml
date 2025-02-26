@@ -75,3 +75,6 @@ testpaths = "tests"
 verbosity_assertions = 2
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.uv.sources]
+sphinx = { git = "https://github.com/trendels/sphinx", branch = "trendels/overload-patch" }
