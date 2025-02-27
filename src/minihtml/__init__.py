@@ -1,4 +1,5 @@
 from ._component import Component, ComponentWrapper, SlotContext, Slots, component
+from ._context import Context
 from ._core import (
     CircularReferenceError,
     Element,
@@ -20,6 +21,7 @@ __all__ = [
     "CircularReferenceError",
     "Component",
     "ComponentWrapper",
+    "Context",
     "Element",
     "ElementEmpty",
     "ElementNonEmpty",
