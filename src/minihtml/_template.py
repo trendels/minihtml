@@ -13,43 +13,47 @@ TemplateImpl: TypeAlias = Callable[P, Node | HasNodes]
 TemplateImplLayout: TypeAlias = Callable[Concatenate[Component, P], None]
 
 
-def _render(result: Node | HasNodes, doctype: bool) -> str:
-    buf = io.StringIO()
-    if doctype:
-        buf.write("<!doctype html>\n")
-    Node.render_list(buf, iter_nodes([result]))
-    buf.write("\n")
-    return buf.getvalue()
+class Template:
+    def __init__(self, callback: Callable[[], list[Node]]):
+        self._callback = callback
+
+    def render(self, *, doctype: bool = True) -> str:
+        nodes = self._callback()
+        buf = io.StringIO()
+        if doctype:
+            buf.write("<!doctype html>\n")
+        Node.render_list(buf, nodes)
+        buf.write("\n")
+        return buf.getvalue()
+
+
+@overload
+def template() -> Callable[[TemplateImpl[P]], Callable[P, Template]]: ...
 
 
 @overload
 def template(
-    *, doctype: bool = ...
-) -> Callable[[TemplateImpl[P]], Callable[P, str]]: ...
-
-
-@overload
-def template(
-    layout: ComponentWrapper[...], *, doctype: bool = ...
-) -> Callable[[TemplateImplLayout[P]], Callable[P, str]]: ...
+    *, layout: ComponentWrapper[...]
+) -> Callable[[TemplateImplLayout[P]], Callable[P, Template]]: ...
 
 
 def template(
-    layout: ComponentWrapper[...] | None = None,
-    *,
-    doctype: bool = True,
+    *, layout: ComponentWrapper[...] | None = None
 ) -> (
-    Callable[[TemplateImpl[P]], Callable[P, str]]
-    | Callable[[TemplateImplLayout[P]], Callable[P, str]]
+    Callable[[TemplateImpl[P]], Callable[P, Template]]
+    | Callable[[TemplateImplLayout[P]], Callable[P, Template]]
 ):
     if layout is None:
 
-        def plain_decorator(fn: TemplateImpl[P]) -> Callable[P, str]:
+        def plain_decorator(fn: TemplateImpl[P]) -> Callable[P, Template]:
             @wraps(fn)
-            def wrapper(*args: P.args, **kwargs: P.kwargs) -> str:
-                with template_context():
-                    result = fn(*args, **kwargs)
-                    return _render(result, doctype=doctype)
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> Template:
+                def callback() -> list[Node]:
+                    with template_context():
+                        result = fn(*args, **kwargs)
+                        return list(iter_nodes([result]))
+
+                return Template(callback)
 
             return wrapper
 
@@ -57,13 +61,16 @@ def template(
 
     else:
 
-        def layout_decorator(fn: TemplateImplLayout[P]) -> Callable[P, str]:
+        def layout_decorator(fn: TemplateImplLayout[P]) -> Callable[P, Template]:
             @wraps(fn)
-            def wrapper(*args: P.args, **kwargs: P.kwargs) -> str:
-                with template_context():
-                    with layout() as result:
-                        fn(result, *args, **kwargs)
-                    return _render(result, doctype=doctype)
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> Template:
+                def callback() -> list[Node]:
+                    with template_context():
+                        with layout() as result:
+                            fn(result, *args, **kwargs)
+                        return list(iter_nodes([result]))
+
+                return Template(callback)
 
             return wrapper
 
@@ -71,12 +78,12 @@ def template(
 
 
 class ResourceWrapper(Node):
-    def __init__(self, callback: Callable[[], Iterable[Node]]):
-        self._callback = callback
+    def __init__(self, nodes: Iterable[Node]):
+        self._nodes = nodes
         self._inline = False
 
     def write(self, f: TextIO, indent: int = 0) -> None:
-        nodes = list(self._callback())
+        nodes = list(self._nodes)
         n = len(nodes)
         for i, node in enumerate(nodes):
             node.write(f, indent)
@@ -86,12 +93,24 @@ class ResourceWrapper(Node):
 
 
 def component_styles() -> ResourceWrapper:
-    wrapper = ResourceWrapper(lambda: get_template_context().styles)
+    """
+    Placeholder element for component styles.
+
+    Can only be used in code called from a :deco:`template`. Inserts the style
+    nodes collected from all components used in the current template.
+    """
+    wrapper = ResourceWrapper(get_template_context().styles)
     register_with_context(wrapper)
     return wrapper
 
 
 def component_scripts() -> ResourceWrapper:
-    wrapper = ResourceWrapper(lambda: get_template_context().scripts)
+    """
+    Placeholder element for component scripts.
+
+    Can only be used in code called from a :deco:`template`. Inserts the script
+    nodes collected from all components used in the current template.
+    """
+    wrapper = ResourceWrapper(get_template_context().scripts)
     register_with_context(wrapper)
     return wrapper

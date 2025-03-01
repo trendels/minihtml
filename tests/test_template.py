@@ -2,6 +2,7 @@ from textwrap import dedent
 
 from minihtml import (
     Component,
+    Context,
     Element,
     Slots,
     component,
@@ -13,25 +14,23 @@ from minihtml import (
 from minihtml.tags import body, div, head, html, main, script, style, title
 
 
-def test_template_returns_html_with_doctype_and_trailing_newline():
+def test_template_renders_as_html_with_doctype_and_trailing_newline():
     @template()
     def my_template(message: str) -> Element:
         return div(message)
 
-    assert my_template("hello") == dedent("""\
+    assert my_template("hello").render() == dedent("""\
         <!doctype html>
         <div>hello</div>
     """)
 
 
 def test_template_can_disable_doctype():
-    @template(doctype=False)
+    @template()
     def my_template(message: str) -> Element:
         return div(message)
 
-    assert my_template("hello") == dedent("""\
-        <div>hello</div>
-    """)
+    assert my_template("hello").render(doctype=False) == "<div>hello</div>\n"
 
 
 def test_template_with_layout_component():
@@ -52,7 +51,7 @@ def test_template_with_layout_component():
             text("my title")
         div(message)
 
-    assert my_template("hello") == dedent("""\
+    assert my_template("hello").render() == dedent("""\
         <!doctype html>
         <html>
           <head>
@@ -67,7 +66,7 @@ def test_template_with_layout_component():
     """)
 
     # Test that layout is not cached
-    assert my_template("goodbye") == dedent("""\
+    assert my_template("goodbye").render() == dedent("""\
         <!doctype html>
         <html>
           <head>
@@ -113,7 +112,7 @@ def test_template_collects_and_deduplicates_component_styles_and_scripts():
         my_component()
         my_component()
 
-    assert my_template() == dedent("""\
+    assert my_template().render() == dedent("""\
         <!doctype html>
         <html>
           <head>
@@ -157,7 +156,7 @@ def test_passing_component_styles_and_scripts_as_arguments():
             ),
         )
 
-    assert my_template() == dedent("""\
+    assert my_template().render() == dedent("""\
         <!doctype html>
         <html>
           <head>
@@ -171,3 +170,21 @@ def test_passing_component_styles_and_scripts_as_arguments():
           </body>
         </html>
     """)
+
+
+def test_template_is_rendered_lazily():
+    class MyContext(Context):
+        def __init__(self, name: str):
+            self.name = name
+
+    @template()
+    def my_template() -> Element:
+        return div(MyContext.get().name)
+
+    t = my_template()
+
+    with MyContext(name="fred"):
+        assert t.render(doctype=False) == "<div>fred</div>\n"
+
+    with MyContext(name="barney"):
+        assert t.render(doctype=False) == "<div>barney</div>\n"
