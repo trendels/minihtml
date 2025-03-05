@@ -14,6 +14,7 @@ author = 'Stanis Trendelenburg'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    'sphinx_copybutton',
     'sphinx.ext.doctest',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
@@ -22,6 +23,8 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = []
 
+copybutton_exclude = '.linenos, .gp, .go'
+copybutton_copy_empty_lines = False
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

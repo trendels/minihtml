@@ -35,6 +35,7 @@ dev = [
 docs = [
     "furo>=2024.8.6",
     "sphinx>=8.2.0 ; python_full_version >= '3.11'",
+    "sphinx-copybutton>=0.5.2",
 ]
 
 [tool.ruff]
