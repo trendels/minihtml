@@ -7,7 +7,9 @@ authors = [
     { name = "Stanis Trendelenburg", email = "stanis.trendelenburg@gmail.com" }
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
+]
 license = "MIT"
 license-files = ["LICENSE"]
 
@@ -30,7 +32,6 @@ dev = [
     "pyyaml>=6.0.2",
     "ruff>=0.9.5",
     "taskgroup>=0.2.2 ; python_full_version < '3.11'",
-    "typing-extensions>=4.12.2 ; python_full_version < '3.11'",
 ]
 docs = [
     "furo>=2024.8.6",
