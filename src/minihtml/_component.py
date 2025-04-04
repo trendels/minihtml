@@ -99,10 +99,10 @@ class Component:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
-        parent, children = pop_element_context()
+        parent, content = pop_element_context()
         assert parent is self._capture
-        if children:
-            self._slots.add_content(None, children)
+        if content:
+            self._slots.add_content(None, content)
 
     @contextmanager
     def slot(self, slot: str | None = None) -> Iterator[None]:
@@ -118,9 +118,9 @@ class Component:
         try:
             yield
         finally:
-            parent, children = pop_element_context()
+            parent, content = pop_element_context()
             assert parent is capture
-            self._slots.add_content(slot, children)
+            self._slots.add_content(slot, content)
 
     def get_nodes(self) -> Iterable[Node]:
         if self._cached_nodes is None:

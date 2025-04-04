@@ -179,7 +179,7 @@ class ElementNonEmpty(Element):
         self._children: list[Node] = []
         self._inline = inline
 
-    def __call__(self, *children: Node | HasNodes | str, **attrs: str | bool) -> Self:
+    def __call__(self, *content: Node | HasNodes | str, **attrs: str | bool) -> Self:
         for name, value in attrs.items():
             name = name if name == "_" else name.rstrip("_").replace("_", "-")
             if not ATTRIBUTE_NAME_RE.fullmatch(name):
@@ -189,10 +189,10 @@ class ElementNonEmpty(Element):
             elif value is not False:
                 self._attrs[name] = value
 
-        for child in children:
-            if not isinstance(child, str):
-                deregister_from_context(child)
-        self._children.extend(iter_nodes(children))
+        for obj in content:
+            if not isinstance(obj, str):
+                deregister_from_context(obj)
+        self._children.extend(iter_nodes(content))
 
         return self
 
@@ -201,9 +201,9 @@ class ElementNonEmpty(Element):
         return self
 
     def __exit__(self, *exc_info: object) -> None:
-        parent, children = pop_element_context()
+        parent, content = pop_element_context()
         assert parent is self
-        parent(*children)
+        parent(*content)
 
     def write(self, f: TextIO, indent: int = 0) -> None:
         ids_seen = _rendering_context.get(None)
@@ -239,8 +239,8 @@ class ElementNonEmpty(Element):
 @dataclass(slots=True)
 class ElementContext:
     parent: ElementNonEmpty
-    collected_nodes: list[Node | HasNodes]
-    registered_nodes: set[Node | HasNodes]
+    collected_content: list[Node | HasNodes]
+    registered_content: set[Node | HasNodes]
 
 
 _context_stack = ContextVar[list[ElementContext]]("context_stack")
@@ -248,7 +248,7 @@ _rendering_context = ContextVar[set[int]]("rendering_context")
 
 
 def push_element_context(parent: ElementNonEmpty) -> None:
-    ctx = ElementContext(parent=parent, collected_nodes=[], registered_nodes=set())
+    ctx = ElementContext(parent=parent, collected_content=[], registered_content=set())
     if stack := _context_stack.get(None):
         stack.append(ctx)
     else:
@@ -258,22 +258,22 @@ def push_element_context(parent: ElementNonEmpty) -> None:
 def pop_element_context() -> tuple[ElementNonEmpty, list[Node | HasNodes]]:
     ctx = _context_stack.get().pop()
     return ctx.parent, [
-        node for node in ctx.collected_nodes if node in ctx.registered_nodes
+        obj for obj in ctx.collected_content if obj in ctx.registered_content
     ]
 
 
-def register_with_context(node: Node | HasNodes) -> None:
+def register_with_context(obj: Node | HasNodes) -> None:
     if stack := _context_stack.get(None):
         ctx = stack[-1]
-        if node not in ctx.registered_nodes:
-            ctx.registered_nodes.add(node)
-            ctx.collected_nodes.append(node)
+        if obj not in ctx.registered_content:
+            ctx.registered_content.add(obj)
+            ctx.collected_content.append(obj)
 
 
-def deregister_from_context(node: Node | HasNodes) -> None:
+def deregister_from_context(obj: Node | HasNodes) -> None:
     if stack := _context_stack.get(None):
         ctx = stack[-1]
-        ctx.registered_nodes.discard(node)
+        ctx.registered_content.discard(obj)
 
 
 class Fragment:
@@ -298,9 +298,9 @@ class Fragment:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
-        parent, children = pop_element_context()
+        parent, content = pop_element_context()
         assert parent is self._capture
-        self._content.extend(children)
+        self._content.extend(content)
 
     def __str__(self) -> str:
         buf = io.StringIO()
@@ -377,9 +377,9 @@ class PrototypeNonEmpty(Prototype):
         self._inline = inline
 
     def __call__(
-        self, *children: Node | HasNodes | str, **attrs: str | bool
+        self, *content: Node | HasNodes | str, **attrs: str | bool
     ) -> ElementNonEmpty:
-        elem = ElementNonEmpty(self._tag, inline=self._inline)(*children, **attrs)
+        elem = ElementNonEmpty(self._tag, inline=self._inline)(*content, **attrs)
         register_with_context(elem)
         return elem
 
@@ -395,8 +395,8 @@ class PrototypeNonEmpty(Prototype):
         return elem
 
     def __exit__(self, *exc_info: object) -> None:
-        parent, children = pop_element_context()
-        parent(*children)
+        parent, content = pop_element_context()
+        parent(*content)
 
     def __repr__(self) -> str:
         return self._get_repr(inline=self._inline)
