@@ -78,8 +78,7 @@ Some additional features:
 
 - A flexible :ref:`component system <components>` with optional :ref:`tracking of JS and CSS dependencies <collecting>`.
 
-- Helpers for :ref:`creating re-useable template with layouts <templates>` and
-  :ref:`making contextual data available in templates <context>`.
+- Helpers for :ref:`creating re-useable template with layouts <templates>`.
 
 - Comes with type annotations for the entire API (for use with type checkes
   such as `mypy <https://mypy-lang.org/>`_ or `pyright
@@ -94,7 +93,6 @@ Continue reading at :ref:`basics` to learn more.
    basics
    components
    templates
-   context
    api
    tags
 

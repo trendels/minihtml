@@ -1,8 +1,8 @@
+from contextvars import ContextVar
 from textwrap import dedent
 
 from minihtml import (
     Component,
-    Context,
     Element,
     Slots,
     component,
@@ -172,19 +172,18 @@ def test_passing_component_styles_and_scripts_as_arguments():
     """)
 
 
-def test_template_is_rendered_lazily():
-    class MyContext(Context):
-        def __init__(self, name: str):
-            self.name = name
+name_context = ContextVar[str]("name")
 
+
+def test_template_is_rendered_lazily():
     @template()
     def my_template() -> Element:
-        return div(MyContext.get().name)
+        return div(name_context.get())
 
     t = my_template()
 
-    with MyContext(name="fred"):
-        assert t.render(doctype=False) == "<div>fred</div>\n"
+    name_context.set("fred")
+    assert t.render(doctype=False) == "<div>fred</div>\n"
 
-    with MyContext(name="barney"):
-        assert t.render(doctype=False) == "<div>barney</div>\n"
+    name_context.set("barney")
+    assert t.render(doctype=False) == "<div>barney</div>\n"
