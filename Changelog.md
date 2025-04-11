@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 (2025-04-11)
+
+- Removed `minihtml.Context`.
+
 ## 0.2.2 (2025-04-06)
 
 - Added `minihtml.Context`.
