@@ -299,7 +299,7 @@ iframe: PrototypeEmpty = make_prototype("iframe", empty=True)
 #: The ``embed`` element.
 embed: PrototypeEmpty = make_prototype("embed", empty=True, omit_end_tag=True)
 #: The ``object`` element.
-object: PrototypeNonEmpty = make_prototype("object")
+object: PrototypeNonEmpty = make_prototype("object", inline=True)
 #: The ``object`` element. Alias for :data:`object`.
 object_ = object
 #: The ``video`` element.
@@ -309,7 +309,7 @@ audio: PrototypeNonEmpty = make_prototype("audio")
 #: The ``track`` element.
 track: PrototypeEmpty = make_prototype("track", empty=True, omit_end_tag=True)
 #: The ``map`` element.
-map: PrototypeNonEmpty = make_prototype("map")
+map: PrototypeNonEmpty = make_prototype("map", inline=True)
 #: The ``map`` element. Alias for :data:`map`.
 map_ = map
 #: The ``area`` element.
@@ -337,15 +337,15 @@ th: PrototypeNonEmpty = make_prototype("th")
 #: The ``form`` element.
 form: PrototypeNonEmpty = make_prototype("form")
 #: The ``label`` element.
-label: PrototypeNonEmpty = make_prototype("label")
+label: PrototypeNonEmpty = make_prototype("label", inline=True)
 #: The ``input`` element.
-input: PrototypeEmpty = make_prototype("input", empty=True, omit_end_tag=True)
+input: PrototypeEmpty = make_prototype("input", inline=True, empty=True, omit_end_tag=True)
 #: The ``input`` element. Alias for :data:`input`.
 input_ = input
 #: The ``button`` element.
-button: PrototypeNonEmpty = make_prototype("button")
+button: PrototypeNonEmpty = make_prototype("button", inline=True)
 #: The ``select`` element.
-select: PrototypeNonEmpty = make_prototype("select")
+select: PrototypeNonEmpty = make_prototype("select", inline=True)
 #: The ``datalist`` element.
 datalist: PrototypeNonEmpty = make_prototype("datalist")
 #: The ``optgroup`` element.
@@ -353,7 +353,7 @@ optgroup: PrototypeNonEmpty = make_prototype("optgroup")
 #: The ``option`` element.
 option: PrototypeNonEmpty = make_prototype("option")
 #: The ``textarea`` element.
-textarea: PrototypeNonEmpty = make_prototype("textarea")
+textarea: PrototypeNonEmpty = make_prototype("textarea", inline=True)
 #: The ``output`` element.
 output: PrototypeNonEmpty = make_prototype("output")
 #: The ``progress`` element.
@@ -382,4 +382,4 @@ template_ = template
 slot: PrototypeNonEmpty = make_prototype("slot")
 #: The ``canvas`` element.
 canvas: PrototypeNonEmpty = make_prototype("canvas")
-# [[[end]]] (checksum: 9d0f6f3a6fdd91db8b23518117d3e1e2)
+# [[[end]]] (checksum: 122bdfe2f4c7ca99f14dbdad1426dedb)

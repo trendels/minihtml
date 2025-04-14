@@ -46,6 +46,7 @@ include = [
     "tests/**/*.py",
     "examples/**.py",
 ]
+extend-exclude = ["src/minihtml/tags.py"]
 
 [tool.ruff.lint]
 extend-select = [

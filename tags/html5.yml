@@ -156,6 +156,7 @@ tags:
     omit_end_tag: true
   object:
     alias: object_
+    inline: true
   video:
   audio:
   track:
@@ -163,6 +164,7 @@ tags:
     omit_end_tag: true
   map:
     alias: map_
+    inline: true
   area:
     empty: true
     omit_end_tag: true
@@ -188,16 +190,21 @@ tags:
   #
   form:
   label:
+    inline: true
   input:
     alias: input_
+    inline: true
     empty: true
     omit_end_tag: true
   button:
+    inline: true
   select:
+    inline: true
   datalist:
   optgroup:
   option:
   textarea:
+    inline: true
   output:
   progress:
   meter:
