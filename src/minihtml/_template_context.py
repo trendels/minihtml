@@ -8,8 +8,8 @@ from ._core import Node
 
 @dataclass
 class TemplateContext:
-    _styles: dict[int, Node] = field(default_factory=dict)
-    _scripts: dict[int, Node] = field(default_factory=dict)
+    _styles: dict[int, Node] = field(default_factory=dict[int, Node])
+    _scripts: dict[int, Node] = field(default_factory=dict[int, Node])
 
     def add_style(self, node: Node):
         self._styles[id(node)] = node
