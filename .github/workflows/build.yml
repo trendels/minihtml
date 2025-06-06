@@ -4,6 +4,10 @@ on: [push]
 
 permissions: {}
 
+env:
+  # Disable check for new pyright version
+  PYRIGHT_PYTHON_IGNORE_WARNINGS: 1
+
 jobs:
   build:
     runs-on: ubuntu-latest
