@@ -176,9 +176,7 @@ Boolean attributes
 ^^^^^^^^^^^^^^^^^^
 
 A boolean HTML attribute is one that does not have a value. For example, to
-mark an input field as required, you can write ``<input required>``. There is
-also an alternative syntax, which minihtml uses: ``<input
-required="required">``.
+mark an input field as required, you can write ``<input required>``.
 
 To set a boolean attribute, pass ``True`` as the value. ``False`` is also a
 valid value, and causes the attribute to be omitted (this can be useful if you
@@ -186,7 +184,7 @@ set the attribute from a variable):
 
 >>> from minihtml.tags import input
 >>> print(input(required=True, disabled=False))
-<input required="required">
+<input required>
 
 .. _content:
 

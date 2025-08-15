@@ -109,8 +109,11 @@ def safe(s: str) -> Text:
     return node
 
 
-def _format_attrs(attrs: dict[str, str]) -> str:
-    return " ".join(f'{k}="{escape(v, quote=True)}"' for k, v in attrs.items())
+def _format_attrs(attrs: dict[str, str], bools: dict[str, Literal[True]]) -> str:
+    return " ".join(
+        [f'{k}="{escape(v, quote=True)}"' for k, v in attrs.items()]
+        + [k for k in bools]
+    )
 
 
 class Element(Node):
@@ -120,6 +123,7 @@ class Element(Node):
 
     _tag: str
     _attrs: dict[str, str]
+    _bools: dict[str, Literal[True]]
 
     def __getitem__(self, key: str) -> Self:
         class_names: list[str] = []
@@ -147,6 +151,7 @@ class ElementEmpty(Element):
         self._inline = inline
         self._omit_end_tag = omit_end_tag
         self._attrs: dict[str, str] = {}
+        self._bools: dict[str, Literal[True]] = {}
 
     def __call__(self, **attrs: str | bool) -> Self:
         for name, value in attrs.items():
@@ -154,14 +159,18 @@ class ElementEmpty(Element):
             if not ATTRIBUTE_NAME_RE.fullmatch(name):
                 raise ValueError(f"Invalid attribute name: {name!r}")
             if value is True:
-                self._attrs[name] = name
+                self._bools[name] = True
             elif value is not False:
                 self._attrs[name] = value
 
         return self
 
     def write(self, f: TextIO, indent: int = 0) -> None:
-        attrs = f" {_format_attrs(self._attrs)}" if self._attrs else ""
+        attrs = (
+            f" {_format_attrs(self._attrs, self._bools)}"
+            if self._attrs or self._bools
+            else ""
+        )
         if self._omit_end_tag:
             f.write(f"<{self._tag}{attrs}>")
         else:
@@ -176,6 +185,7 @@ class ElementNonEmpty(Element):
     def __init__(self, tag: str, *, inline: bool = False):
         self._tag = tag
         self._attrs: dict[str, str] = {}
+        self._bools: dict[str, Literal[True]] = {}
         self._children: list[Node] = []
         self._inline = inline
 
@@ -185,7 +195,7 @@ class ElementNonEmpty(Element):
             if not ATTRIBUTE_NAME_RE.fullmatch(name):
                 raise ValueError(f"Invalid attribute name: {name!r}")
             if value is True:
-                self._attrs[name] = name
+                self._bools[name] = True
             elif value is not False:
                 self._attrs[name] = value
 
@@ -220,7 +230,11 @@ class ElementNonEmpty(Element):
             first_child_is_block = self._children and not self._children[0]._inline
             indent_next_child = not inline_mode or first_child_is_block
 
-            attrs = f" {_format_attrs(self._attrs)}" if self._attrs else ""
+            attrs = (
+                f" {_format_attrs(self._attrs, self._bools)}"
+                if self._attrs or self._bools
+                else ""
+            )
             f.write(f"<{self._tag}{attrs}>")
             for node in self._children:
                 if indent_next_child or not node._inline:

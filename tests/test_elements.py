@@ -58,14 +58,14 @@ def test_attribute_name_mangling(kwarg: str, attribute: str):
 
 
 def test_boolean_attributes():
-    assert str(div(enabled=True)) == '<div enabled="enabled"></div>'
+    assert str(div(enabled=True)) == "<div enabled></div>"
     assert str(div(enabled=False)) == "<div></div>"
-    assert str(div(_=True)) == '<div _="_"></div>'
+    assert str(div(_=True)) == "<div _></div>"
     assert str(div(_=False)) == "<div></div>"
 
-    assert str(img(enabled=True)) == '<img enabled="enabled">'
+    assert str(img(enabled=True)) == "<img enabled>"
     assert str(img(enabled=False)) == "<img>"
-    assert str(img(_=True)) == '<img _="_">'
+    assert str(img(_=True)) == "<img _>"
     assert str(img(_=False)) == "<img>"
 
 
