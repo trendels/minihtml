@@ -25,16 +25,19 @@ or
 A basic "hello, world" example:
 
 ~~~python
->>> from minihtml.tags import html, head, title, body, div, p, a, img
+>>> from minihtml.tags import html, head, title, body, div, p, a, img, ul, li
+>>> links = [("Home", "/"), ("About Me", "/about"), ("Projects", "/projects")]
 >>> with html(lang="en") as elem:
 ...     with head:
 ...         title("hello, world!")
 ...     with body, div["#content main"]:
 ...         p("Welcome to ", a(href="https://example.com/")("my website"))
 ...         img(src="hello.png", alt="hello")
+...         with ul:
+...             for title, url in links:
+...                 li(a(href=url)(title))
 ...
 <...>
-
 >>> print(elem)
 <html lang="en">
   <head>
@@ -44,6 +47,11 @@ A basic "hello, world" example:
     <div id="content" class="main">
       <p>Welcome to <a href="https://example.com/">my website</a></p>
       <img src="hello.png" alt="hello">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About Me</a></li>
+        <li><a href="/projects">Projects</a></li>
+      </ul>
     </div>
   </body>
 </html>
