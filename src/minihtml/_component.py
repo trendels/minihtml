@@ -1,6 +1,6 @@
 import io
 import sys
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Generator, Iterable, Sequence
 from contextlib import contextmanager
 from typing import Callable, Concatenate, Generic, ParamSpec, TypeAlias
 
@@ -105,7 +105,7 @@ class Component:
             self._slots.add_content(None, content)
 
     @contextmanager
-    def slot(self, slot: str | None = None) -> Iterator[None]:
+    def slot(self, slot: str | None = None) -> Generator[None]:
         """
         Args:
             slot: The slot name, or `None` to refer to the default slot.

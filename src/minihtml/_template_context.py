@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Generator, Iterable, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -46,7 +46,7 @@ def get_template_context() -> TemplateContext:
 
 
 @contextmanager
-def template_context() -> Iterator[None]:
+def template_context() -> Generator[None]:
     token = _template_context.set(TemplateContext())
     try:
         yield
