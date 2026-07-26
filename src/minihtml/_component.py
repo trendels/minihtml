@@ -1,8 +1,8 @@
 import io
 import sys
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 from contextlib import contextmanager
-from typing import Callable, Concatenate, Generic, ParamSpec, TypeAlias
+from typing import Concatenate, Generic, ParamSpec, TypeAlias
 
 if sys.version_info >= (3, 11):
     from typing import Self

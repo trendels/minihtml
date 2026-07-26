@@ -22,8 +22,6 @@ class CircularReferenceError(Exception):
     Raised when a circular reference between elements is detected.
     """
 
-    pass
-
 
 class Node:
     """
@@ -45,9 +43,10 @@ class Node:
         node_list = list(nodes)
         for node, next_ in zip_longest(node_list, node_list[1:]):
             node.write(f)
-            if next_ is not None:
-                if node._inline != next_._inline or not (node._inline or next_._inline):
-                    f.write("\n")
+            if next_ is not None and (
+                node._inline != next_._inline or not (node._inline or next_._inline)
+            ):
+                f.write("\n")
 
 
 class HasNodes(Protocol):
@@ -62,8 +61,7 @@ def iter_nodes(objects: Iterable[Node | HasNodes | str]) -> Iterator[Node]:
             case Node():
                 yield obj
             case _:
-                for node in obj.get_nodes():
-                    yield node
+                yield from obj.get_nodes()
 
 
 class Text(Node):
@@ -226,7 +224,7 @@ class ElementNonEmpty(Element):
             _rendering_context.set(ids_seen)
 
         try:
-            inline_mode = self._inline or all([c._inline for c in self._children])
+            inline_mode = self._inline or all(c._inline for c in self._children)
             first_child_is_block = self._children and not self._children[0]._inline
             indent_next_child = not inline_mode or first_child_is_block
 

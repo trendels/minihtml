@@ -1,7 +1,7 @@
 import io
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import Callable, Concatenate, ParamSpec, TextIO, TypeAlias, overload
+from typing import Concatenate, ParamSpec, TextIO, TypeAlias, overload
 
 from ._component import Component, ComponentWrapper
 from ._core import HasNodes, Node, iter_nodes, register_with_context

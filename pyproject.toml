@@ -30,7 +30,7 @@ dev = [
     "pytest>=9.0.0",
     "pytest-asyncio>=0.25.3",
     "pyyaml>=6.0.2",
-    "ruff>=0.9.5",
+    "ruff>=0.16.0",
     "taskgroup>=0.2.2 ; python_full_version < '3.11'",
 ]
 docs = [
@@ -49,11 +49,9 @@ include = [
 extend-exclude = ["src/minihtml/tags.py"]
 
 [tool.ruff.lint]
-extend-select = [
-    "I", # isort
-]
 ignore = [
     "E731", # lambda assignment
+    "SIM117",  # don't merge nested `with` statements
 ]
 
 [tool.pyright]
